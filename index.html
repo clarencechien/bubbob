@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>強化版泡泡龍 — A 軸「蓄能引爆」手感原型 v0.1</title>
+<title>強化版泡泡龍 — A 軸「蓄能引爆」手感原型 v0.2</title>
 <style>
   :root {
     --bg: #0d1220;
@@ -30,6 +30,7 @@
     background: #0a0f1c;
     border-radius: 10px;
     box-shadow: 0 0 0 1px #263255, 0 12px 40px rgba(0,0,0,.5);
+    image-rendering: pixelated;
   }
   #panel {
     width: 300px; flex: 0 0 300px;
@@ -40,8 +41,16 @@
     max-height: 660px; overflow-y: auto;
   }
   #panel h1 { font-size: 14px; letter-spacing: 1px; color: var(--accent); margin-bottom: 2px; }
-  #panel .sub { font-size: 11px; color: var(--dim); margin-bottom: 12px; }
-  .knob { margin-bottom: 12px; background: var(--panel2); border-radius: 8px; padding: 8px 10px; }
+  #panel .sub { font-size: 11px; color: var(--dim); margin-bottom: 10px; }
+  .diff-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .diff-row button {
+    flex: 1; padding: 8px 0; font-size: 13px; font-weight: bold;
+    background: var(--panel2); color: var(--text);
+    border: 1px solid #2a3554; border-radius: 8px; cursor: pointer;
+  }
+  .diff-row button:hover { border-color: var(--accent); }
+  .diff-row button.active { background: var(--accent); color: #201400; border-color: var(--accent); }
+  .knob { margin-bottom: 10px; background: var(--panel2); border-radius: 8px; padding: 8px 10px; }
   .knob.main { outline: 2px solid var(--accent); }
   .knob label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
   .knob label .val { color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -50,6 +59,8 @@
   .hud-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; border-bottom: 1px dashed #2a3554; }
   .hud-row .v { color: #fff; font-variant-numeric: tabular-nums; }
   .section-title { font-size: 11px; color: var(--dim); letter-spacing: 2px; margin: 14px 0 6px; }
+  .legend { font-size: 11px; line-height: 1.9; background: var(--panel2); border-radius: 8px; padding: 8px 10px; }
+  .legend b { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
   .assets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .asset-slot { background: var(--panel2); border-radius: 8px; padding: 7px 8px; font-size: 11px; }
   .asset-slot .name { display:block; margin-bottom: 4px; color: var(--text); }
@@ -70,33 +81,59 @@
 <div id="game-wrap"><canvas id="cv" width="900" height="640"></canvas></div>
 
 <div id="panel">
-  <h1>蓄能引爆 · 手感原型</h1>
+  <h1>蓄能引爆 · 手感原型 v0.2</h1>
   <div class="sub">拖滑桿即時生效。目標：找到 escapeRate 的甜蜜點。</div>
 
+  <div class="diff-row">
+    <button id="diff-easy">簡單</button>
+    <button id="diff-normal" class="active">中等</button>
+    <button id="diff-hard">最難</button>
+  </div>
+
   <div class="knob main">
-    <label>escapeRate <span class="cn">掙脫頻率（主旋鈕）</span><span class="val" id="v-escapeRate">1.00</span></label>
+    <label>escapeRate 掙脫頻率（主旋鈕）<span class="val" id="v-escapeRate">1.00</span></label>
     <input type="range" id="k-escapeRate" min="0" max="2" step="0.05" value="1">
     <div class="desc">低 → 賭場（喘息、佈局）；高 → 格鬥場（手速）。§10.4：從 0.3 掃到 1.8 找甜蜜點。</div>
   </div>
   <div class="knob">
     <label>ripenSpeed 熟成速度<span class="val" id="v-ripenSpeed">1.00</span></label>
     <input type="range" id="k-ripenSpeed" min="0.5" max="2" step="0.05" value="1">
-    <div class="desc">越大越快熟（下注視窗越短）。</div>
   </div>
   <div class="knob">
     <label>chainStrength 連鎖強度<span class="val" id="v-chainStrength">1.00</span></label>
     <input type="range" id="k-chainStrength" min="0.5" max="2" step="0.05" value="1">
-    <div class="desc">連鎖倍率曲線縮放（jackpot 的胃口）。</div>
   </div>
   <div class="knob">
     <label>cascadeStrength 崩盤強度<span class="val" id="v-cascadeStrength">1.00</span></label>
     <input type="range" id="k-cascadeStrength" min="0" max="2" step="0.05" value="1">
-    <div class="desc">掙脫時震鬆鄰居的烈度（貪婪的懲罰）。</div>
   </div>
   <div class="knob">
     <label>spawnInterval 生成間隔<span class="val" id="v-spawnInterval">2.00</span></label>
     <input type="range" id="k-spawnInterval" min="0.5" max="4" step="0.1" value="2">
-    <div class="desc">敵人生成間隔秒數（熱拍密度）。</div>
+  </div>
+  <div class="knob">
+    <label>maxHp 血量上限（被碰幾次死）<span class="val" id="v-maxHp">5</span></label>
+    <input type="range" id="k-maxHp" min="1" max="10" step="1" value="5">
+  </div>
+  <div class="knob">
+    <label>healAmount 黃泡補血量<span class="val" id="v-healAmount">1</span></label>
+    <input type="range" id="k-healAmount" min="0" max="3" step="1" value="1">
+  </div>
+  <div class="knob">
+    <label>dualDur 雙泡秒數（橙）<span class="val" id="v-dualDur">10</span></label>
+    <input type="range" id="k-dualDur" min="2" max="20" step="1" value="10">
+  </div>
+  <div class="knob">
+    <label>starDur 無敵星秒數（紅）<span class="val" id="v-starDur">10</span></label>
+    <input type="range" id="k-starDur" min="2" max="20" step="1" value="10">
+  </div>
+
+  <div class="section-title">引爆獎勵（依 Tier）</div>
+  <div class="legend">
+    <b style="background:#4ade80"></b>綠 醞釀：純分數<br>
+    <b style="background:#facc15"></b>黃 半熟：補血 +healAmount<br>
+    <b style="background:#fb923c"></b>橙 熟成：雙泡能力 dualDur 秒<br>
+    <b style="background:#ef4444"></b>紅 過熟：無敵星 starDur 秒（碰敵自動困成泡泡）
   </div>
 
   <div class="section-title">HUD 讀數</div>
@@ -114,8 +151,7 @@
     <div class="asset-slot" id="slot-bubble"><span class="name">泡泡（自動套 Tier 色）</span><input type="file" accept="image/*" data-slot="bubble"></div>
   </div>
   <div class="help">
-    圖片會取代對應的程式繪圖，squash &amp; stretch、Tier 著色、閃爍全部照常套用。<br>
-    也可在 console 用 <kbd>loadAsset('player','url')</kbd>。
+    預設素材：KAPLAY crew（MIT）。上傳圖片即時替換；squash &amp; stretch、Tier 著色、閃爍照常套用。console 亦可 <kbd>loadAsset('player', url)</kbd>。
   </div>
 
   <button id="resetBtn">重開一局（R）</button>
@@ -124,7 +160,7 @@
     <kbd>←→</kbd>/<kbd>A D</kbd> 移動　<kbd>空白</kbd>/<kbd>↑</kbd>/<kbd>W</kbd> 跳<br>
     <kbd>J</kbd>/<kbd>滑鼠左鍵</kbd> 吐泡泡（困敵）<br>
     <b>身體碰到敵泡泡 = 引爆</b>（鄰近連鎖）<br>
-    碰到自由 / 暴走敵人 = 扣命重生<br>
+    碰到自由 / 暴走敵人 = 扣 1 血 + 短暫無敵<br>
     <kbd>P</kbd> 暫停
   </div>
 </div>
@@ -132,43 +168,139 @@
 <script>
 'use strict';
 // =====================================================================
-// 強化版泡泡龍 A 軸原型 — 單檔、零相依、Canvas 2D、固定 60Hz 時間步
-// 規格：bubble_bobble_A_prototype_spec v0.1
+// 強化版泡泡龍 A 軸原型 v0.2 — 單檔、零相依、Canvas 2D、固定 60Hz
+// 規格：SPEC.md v0.2（血量制、Tier 引爆獎勵、難易度預設、像素美術）
 // =====================================================================
 
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
 const W = cv.width, H = cv.height;
+ctx.imageSmoothingEnabled = false; // pixel art：nearest-neighbor
 
 // ---------------------------------------------------------------------
 // 可調旋鈕（§7）— 由面板滑桿即時驅動
 // ---------------------------------------------------------------------
 const KNOBS = {
-  escapeRate: 1.0,     // 主旋鈕：掙脫總頻率
-  ripenSpeed: 1.0,     // 熟成快慢
-  chainStrength: 1.0,  // 連鎖倍率曲線縮放
-  cascadeStrength: 1.0,// 震鄰崩盤強度
-  spawnInterval: 2.0,  // 敵人生成間隔（秒）
+  escapeRate: 1.0, ripenSpeed: 1.0, chainStrength: 1.0,
+  cascadeStrength: 1.0, spawnInterval: 2.0,
+  maxHp: 5, healAmount: 1, dualDur: 10, starDur: 10,
 };
+const S = {}; // 遊戲狀態容器（reset() 填內容；先宣告給滑桿回呼引用）
+const INT_KNOBS = new Set(['maxHp', 'healAmount', 'dualDur', 'starDur']);
+const knobEls = {};
 for (const key of Object.keys(KNOBS)) {
   const el = document.getElementById('k-' + key);
   const lab = document.getElementById('v-' + key);
-  const sync = () => { KNOBS[key] = parseFloat(el.value); lab.textContent = KNOBS[key].toFixed(2); };
+  knobEls[key] = { el, lab };
+  const sync = () => {
+    KNOBS[key] = parseFloat(el.value);
+    lab.textContent = INT_KNOBS.has(key) ? String(KNOBS[key]) : KNOBS[key].toFixed(2);
+    if (key === 'maxHp' && S.player) S.player.hp = Math.min(S.player.hp, KNOBS.maxHp);
+  };
   el.addEventListener('input', sync); sync();
+}
+function setKnob(key, v) {
+  KNOBS[key] = v;
+  knobEls[key].el.value = v;
+  knobEls[key].lab.textContent = INT_KNOBS.has(key) ? String(v) : v.toFixed(2);
+}
+
+// 難易度一鍵預設（SPEC §7）：改寫所有旋鈕並補滿血
+const PRESETS = {
+  easy:   { escapeRate: 0.5, ripenSpeed: 0.8, chainStrength: 1.3, cascadeStrength: 0.5, spawnInterval: 3.0, maxHp: 7, healAmount: 2, dualDur: 14, starDur: 14 },
+  normal: { escapeRate: 1.0, ripenSpeed: 1.0, chainStrength: 1.0, cascadeStrength: 1.0, spawnInterval: 2.0, maxHp: 5, healAmount: 1, dualDur: 10, starDur: 10 },
+  hard:   { escapeRate: 1.6, ripenSpeed: 1.4, chainStrength: 0.9, cascadeStrength: 1.6, spawnInterval: 1.0, maxHp: 3, healAmount: 1, dualDur: 6, starDur: 6 },
+};
+const DIFF_LABEL = { easy: '簡單', normal: '中等', hard: '最難' };
+for (const name of Object.keys(PRESETS)) {
+  document.getElementById('diff-' + name).addEventListener('click', () => applyPreset(name));
+}
+function applyPreset(name) {
+  for (const [k, v] of Object.entries(PRESETS[name])) setKnob(k, v);
+  if (S.player) S.player.hp = KNOBS.maxHp; // 換難度 = 重新測試，補滿血
+  document.querySelectorAll('.diff-row button').forEach(b => b.classList.remove('active'));
+  document.getElementById('diff-' + name).classList.add('active');
+  if (S.popups) S.popups.push({ x: W / 2, y: 200, text: '難易度：' + DIFF_LABEL[name], color: '#ffb020', t: 1.4, big: true });
 }
 
 // ---------------------------------------------------------------------
-// 素材槽 — 「換上素材就有感」的接縫。
-// 所有實體都經由 drawSprite() 繪製：有圖用圖（照樣吃 squash&stretch、
-// 翻面、Tier 著色），沒圖就 fallback 到程式繪圖。之後正式美術只要
-// 把圖塞進 ASSETS 就完成置換，不動任何遊戲邏輯。
+// 素材：預設為內嵌的 KAPLAY crew 像素圖（MIT, © KAPLAY Team）。
+// 所有實體都經由 drawSprite() 繪製，上傳 / loadAsset 可即時替換，
+// squash & stretch、Tier 著色、閃爍照常套用 —— 正式美術只要換圖。
 // ---------------------------------------------------------------------
-const ASSETS = { player: null, enemy: null, enemyEnraged: null, bubble: null };
+const EMBED = {
+  dino: "iVBORw0KGgoAAAANSUhEUgAAACYAAAAyCAYAAAAweqkjAAAAAXNSR0IArs4c6QAAAk5JREFUWIXFWL1uwkAMvqAu3cITBKkbTK2qTkxdGOjGW/A6rXgLNhi6MDFW7QRbJXgCsnWkUyLH2D774sAnVdDDd/7y+SdOQkhAkQ/PWjutLUZm3QAdHcs9ux8Tkmwp9KzEJOexdQtMxCiHeA3+v3x6Fve6EYMOKacUKWjXOTHsnCOFYSmGVsQkElYbjDutIXels++v6BomVuTDc6xK1SXsUWkYErnWoWwD6WIzrSGH8WIatdnO1+LvlHL1gpWUhhAFjiQml0SMIiWporWH5NhQ4kqClQYdxcKUSq5V8mtJcbYU2Uqci6SjVKPUwo4Op12YPs4uHK1/lmHQH4lk8FnHcp+pGyzGeDFtHAidQ3DrMZANjisEa9Jr9lNnHMt91rrBatuGpb0U+fCsnkCth1uBVbvpLUmCOvlT1IIq4GKJnacOpZWYpfFStjcPJdf9k/tYDFjh7XxtupVdTTFtKlT3SjfFLI2WA5wuXBTzJhWCA7EuSIXgGMoUSA8jnRCzvkChIM5jEFJVSeFMJdnIMWnuT80ll/dj1SFvn68No9VkU3/XzlQYye/HOFJ47VrK9fCmj5d30pAiXMGjZWA0cuxw2oVBf9QIXYwIHmW8hskeJfHhtAuryab+qyCFFBLyIFcrVqlVfUJoyXlCfUviyIXQzbNAFoKtYrgiKH/v6+/aFycSWMW4Q7jCyB/+RFJWiFcgKUkphxsx9SCrJWYae2AuYeU0dwcLzNMFVIIKq1sfS9nEOfeszuQcS0FnOXZNRK/ASzXr2KMybksuZYr9B9UmNx1MLzDWAAAAAElFTkSuQmCC",
+  ghosty: "iVBORw0KGgoAAAANSUhEUgAAADQAAAA8CAYAAAApK5mGAAAAAXNSR0IArs4c6QAAAgRJREFUaIHtmktywyAMhmWPD5CcIFnHM7lbTtK7dSZexyeIb5BuSsfFgB4grKb8q9Yg0IfEwzgdCHU6XF5SW6rmZeq4NmyDGiC+OGDkinuA+KKAoRUsgKyFQSULKTAfn3euT6hu1zFZnoKKFqRgNCBCSoHFoIIPYzC1QHzFwEJQmwfWYNYKgflQv/6xDOOEQfXuj78AQ1GfKrQIE/JpHYzBf5AydEqtPpJBKNleB0ADwvYGiSOcNjF/3DwKplwuDGZzu47sNrH6LijJOZSrkBOSweHYokA5DpSwjymW0j338Pl4xudGqqxWe6oph0niMKYNELY6nY9j0JHH8w7nIy+9uPUpEkUo5EjMuZoDBEAAyjktUG05A4SJFCEJVMxG+zhFTjmOI1hdKRRmdzpcXp2/bNc8kFL3KM65csjyKFMag7frPqShBmRdDci6GpB1NSDrakDW1YCsS3zaLn0dXEoiIOw9xpVjYJT3Ie7gsFOOc3GIXQeX7g+ACaR1C1qy3+w3Vv+T4N4/AyADUb5vlmxLOjBvt2yLgaTR0W6rRci6/ieQ9mfEkqoeIW3AzT7kn8O4+8+8TJv78ppRGkIO1HSi5JINIEg5igNUJ0vDAHwDaTiA1eXCUDPmZw6tOwiloGQ0NSKwVghStcNcSQ6ob7WxzsvUmY4QAD1KLr3NAwHgUOu5+gU1E/8vo/BmaAAAAABJRU5ErkJggg==",
+  circle: "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAElJREFUOI1jYKAQMOKS+P///38UhYyMONViaETXjE8cr60kqSFGMza1TMRqItpEUvVQ7IKBNwAOBjYWSHEFUamRlKRM/cxEKgAAUqZPxel/OhQAAAAASUVORK5CYII=",
+  heart: "iVBORw0KGgoAAAANSUhEUgAAACcAAAAiCAYAAADcbsCGAAAAAXNSR0IArs4c6QAAASpJREFUWIXVmMEVgjAMhtM+B3AD796cyFF4jsJE3LizARvoSV/FJE3SBOp/g1d+PtKQNk2wgy7n61MyblnnVF4namDNcGvUAkX5oi/QmGKQFijM08W4BGwFKz2/4FqMl3VO3PPTMJLP3h53Ho4y3ppiRpw4KM63Cqf9WisY5ZetxpoXS4T5ZQB7rnGAHvCnVuNpGD9T4h1NFE4rb6i3yJzrQdmraEao78htb0Tlj0X/Fbme9AOnXTsj1XfkJDvaPaRa+I/Wss4Jhesl7zKArFmJFBUMclr3ih61RQc4OOdqAag2OFHLGQVWplg1chHTKwEDUPStHhHkPhT7KdUdvxZSEnmqWpjPSlrbxhoYAAP3VtROWVJbRcXXE1BT8MUDvU6ONDItW9bDQK1eux+SirvKsYAAAAAASUVORK5CYII=",
+  sun: "iVBORw0KGgoAAAANSUhEUgAAADoAAAA2CAYAAACWeYpTAAAAAXNSR0IArs4c6QAAAcVJREFUaIHtmkGOwyAMRWmUA+QG0ai7XKvnmmt1Nxr1Br1BZhUJUSDY/ti407+q1MTwsAHjEIKS1mXb12XbtdpLddFoJAV8PO8q7caatBu00gf03fQBfTdlV794lUStkIdNixU3hAxobq+z6tyZKIPnMnTT5KMlEXkBzY2OZUaTituXeZSO9J4eReOUBamHx2ttclJK8Sj2DmuUp9lGNOctApZl4Azy5/fWbOv69d30nBQWCkoBrKkEL4Elv5iDRAHGysGqgWpBHkLCusyMOBKB9vRmyT53tW8GtUoDUbBsj/b2Jlou5ihiUF2A5kQNXzegUq/OIYxRYEapVCGZcn+MdNCmqNTvddl2N6Er1ZQLU6+hW+r343m/zLUHPKrE8n9Cl/ti64EZJWl7zaCW4Y0YVFHoangVVW0YtsIQArakAqsZIWFrkWJeYUCFcQ/IEDrVdTnePRsok3LnIUR9tzfgoaE/SSC3NJghJHCPPRtqEAHbKzE5Ncq5z0AF1si6yN89rU863EsfxX10xCoD9d5CLFLCYO3NVBRY1dOL5VXWImgMhoLM/aZI0o/qrZTRQlUid6UUbqTB7xlpiBNp7jzqQpar7h/B/O9R1trkygAAAABJRU5ErkJggg==",
+  grass: "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAdlJREFUeJztmy1yQjEURvM6XUAFmgpcPQ6LYifsoCtgB+wEVYurx1VQXcEOWnWZEEKa3CTvuy+5Rz3aSbjfmfwy8wZj8fry9ms64Hw5DfR8feglPEESBmP6C0+cL6dh6DU88ez+YbXfIOoYjeP2cPP5CVSHGFQAugA0KgBdABoVgC4Azd05QBLunh2Ce34RKSAluK9NigxRU+C4PbDC+/qJxXsXGPs4XCJ0CDuP+13By1BtEbHBd+tl8P/vH59R/az2mzQB1Kg0McH/C+0jVoRN0nU4V0at4C4pIti/B6TIGCu4S4yIOwG79ZI1lLjUCO4SyuMVENOwBGOEd3EzBQ9CVGBpEYjgj4g6CboFc4RICm3DOgqjwizmM2OMMV/fP8X6FHUUDkHh3edcJiOgFpMRYA/7klNA5HX4ESWDE5MZAbVQAdyGi/ms6GqMgiWg1paEQKcAp1GtLQkBexucenBCpwC6ADQqAF0AGhWALgCNCkAXgL5TQAVIuFPARwAaqAAJdwr4T2LoO0WzUyB2cW1SQMri2qSAFJoUkLK4whfBWsQurk2OgBRUQIlO0Of5HLIFSDjP56BTILcDCef5HIpsg1MMTnT/4qS+OksfepNw8/I00YsE+/X5P+6znC4h3qbLAAAAAElFTkSuQmCC",
+  brick: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAwUlEQVRYhe1WMQqDQBAcw1ZiGi0ECyVFHhN87+FjUgQt8oGEtFrIBVJodM9jmp36hh24mdlN8qIc21sLDVzncLk2Kq6HAMDw7HcT62oenKVn9fD354WTmn0QTABdgACzGVhI8qIcadMByFqOH/cesTtClnLsvyV2R9BNaALoAuTfg9gdwe8BAOqdHtITPwKA/Xs9pCc86qrhm9AE0AV8TajNe2hP8HtgLceuc0H3wBauLOX4iHtgC5duQhNgAug9MAGP+0PFSrXCXgAAAABJRU5ErkJggg=="
+};
 
-function loadAsset(slot, url) {
+const ASSETS = { player: null, enemy: null, enemyEnraged: null, bubble: null, heart: null, sun: null, grass: null, brick: null };
+const USER_SET = new Set(); // 使用者自行上傳過的槽位
+let enragedAuto = null;     // 由 enemy 自動紅染的暴走變體
+let bubbleTiers = null;     // 依 Tier 著色的泡泡快取
+let patterns = {};          // 平台 / 牆面 pattern 快取
+
+function rebuildDerived() {
+  // 暴走變體：把 enemy 紅染（若使用者沒提供專用圖）
+  if (ASSETS.enemy) {
+    const img = ASSETS.enemy;
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = 'rgba(255,50,60,0.55)';
+    g.fillRect(0, 0, c.width, c.height);
+    enragedAuto = c;
+  }
+  // 泡泡 Tier 快取：外框著色 + 內部半透明填色 + 像素高光
+  if (ASSETS.bubble) {
+    bubbleTiers = TIERS.map(T => {
+      const src = ASSETS.bubble;
+      const c = document.createElement('canvas');
+      c.width = src.width; c.height = src.height;
+      const g = c.getContext('2d');
+      g.imageSmoothingEnabled = false;
+      g.drawImage(src, 0, 0);
+      g.globalCompositeOperation = 'source-atop';
+      g.fillStyle = T.color;
+      g.fillRect(0, 0, c.width, c.height);
+      g.globalCompositeOperation = 'destination-over';
+      g.fillStyle = hexA(T.color, 0.22);
+      g.beginPath();
+      g.arc(c.width / 2, c.height / 2, c.width * 0.42, 0, Math.PI * 2);
+      g.fill();
+      // 像素高光（左上兩格）
+      g.globalCompositeOperation = 'source-over';
+      g.fillStyle = 'rgba(255,255,255,0.85)';
+      const u = Math.max(1, Math.round(c.width / 16));
+      g.fillRect(Math.round(c.width * 0.28), Math.round(c.height * 0.2), u * 2, u);
+      g.fillRect(Math.round(c.width * 0.22), Math.round(c.height * 0.28), u, u);
+      return c;
+    });
+  }
+  // 地形 pattern
+  if (ASSETS.brick) patterns.brick = ctx.createPattern(ASSETS.brick, 'repeat');
+  if (ASSETS.grass) {
+    const c = document.createElement('canvas');
+    c.width = 24; c.height = 24;
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.drawImage(ASSETS.grass, 0, 0, 24, 24);
+    patterns.grass = ctx.createPattern(c, 'repeat');
+  }
+}
+
+function loadAsset(slot, url, fromUser = true) {
   const img = new Image();
   img.onload = () => {
     ASSETS[slot] = img;
+    if (fromUser) USER_SET.add(slot);
+    rebuildDerived();
     const box = document.getElementById('slot-' + slot);
     if (box) box.classList.add('loaded');
   };
@@ -184,10 +316,15 @@ document.querySelectorAll('.asset-slot input[type=file]').forEach(inp => {
 });
 
 // 若有素材圖則畫圖並回傳 true；否則回傳 false 讓呼叫端畫程式圖形。
-// (x, y) 為中心點；w, h 已含 squash & stretch。
-function drawSprite(slot, x, y, w, h, opts = {}) {
-  const img = ASSETS[slot];
+// (x, y) 中心點；size 為目標尺寸（保持原圖長寬比、以較長邊貼齊）；
+// sx / sy 為 squash & stretch 倍率。
+function drawSprite(imgOrSlot, x, y, size, opts = {}) {
+  const img = typeof imgOrSlot === 'string' ? ASSETS[imgOrSlot] : imgOrSlot;
   if (!img) return false;
+  const ratio = img.width / img.height;
+  let w = size, h = size;
+  if (ratio > 1) h = size / ratio; else w = size * ratio;
+  w *= (opts.sx || 1); h *= (opts.sy || 1);
   ctx.save();
   ctx.translate(x, y);
   if (opts.flip) ctx.scale(-1, 1);
@@ -221,8 +358,7 @@ function escapeTickProb(tier) {
   return 1 - Math.pow(1 - p, ESCAPE_TICK);
 }
 
-// 連鎖倍率表（§5），chainStrength 縮放「額外倍率」部分，
-// 讓 N=1 永遠 ×1（不懲罰不玩連鎖的休閒下車口，§10.5）。
+// 連鎖倍率表（§5），chainStrength 縮放「額外倍率」部分（N=1 恆為 ×1）
 const CHAIN_TABLE = [0, 1, 2, 4, 7, 11, 16]; // N=1..6+
 function chainMult(n) {
   const base = CHAIN_TABLE[Math.min(n, 6)];
@@ -233,11 +369,11 @@ const POP_RADIUS = 70;      // §5 鄰近引信半徑
 const CASCADE_RADIUS = 90;  // §4 震鄰半徑
 
 // ---------------------------------------------------------------------
-// 場地：一面牆的單畫面競技場 + 單向平台（利於趕叢與走位）
+// 場地：單畫面競技場 + 單向平台
 // ---------------------------------------------------------------------
 const FLOOR_Y = 600;
 const WALL = 16;
-const PLATFORMS = [ // 單向平台 {x, y, w}
+const PLATFORMS = [
   { x: 90,  y: 480, w: 250 },
   { x: 560, y: 480, w: 250 },
   { x: 300, y: 360, w: 300 },
@@ -245,39 +381,36 @@ const PLATFORMS = [ // 單向平台 {x, y, w}
   { x: 610, y: 240, w: 220 },
   { x: 330, y: 150, w: 240 },
 ];
-const BUBBLE_CEIL = 96; // 敵泡泡上浮到這個高度帶就懸停
-
+const BUBBLE_CEIL = 96;
 const GRAVITY = 1500;
 
 // ---------------------------------------------------------------------
 // 遊戲狀態
 // ---------------------------------------------------------------------
-const S = {}; // 在 reset() 內初始化
-
 function reset() {
   S.player = {
     x: W / 2, y: FLOOR_Y - 20, vx: 0, vy: 0, r: 16,
     facing: 1, onGround: false, coyote: 0,
-    shootCd: 0, invuln: 2.0, dead: false, deadT: 0,
-    sx: 1, sy: 1, // squash & stretch
+    shootCd: 0, invuln: 2.0,
+    hp: KNOBS.maxHp, dead: false,
+    dualT: 0, starT: 0, // 橙泡雙泡 / 紅泡無敵星 倒數
+    sx: 1, sy: 1,
   };
-  S.enemies = [];      // {state:'FREE'|'ENRAGED', x,y,vx,vy,r,dir,onGround,invuln,hopT}
-  S.bubbles = [];      // 敵泡泡 {x,y,r,age,phase,vx,vy,enemyKind}
-  S.shots = [];        // 發射泡泡 {x,y,vx,r,life}
+  S.enemies = [];
+  S.bubbles = [];
+  S.shots = [];
   S.particles = [];
-  S.popups = [];       // 浮動計分文字
+  S.popups = [];
   S.score = 0;
   S.maxChain = 0;
   S.escapes = 0;
-  S.lives = 3;
   S.spawnT = 0.5;
   S.escapeClock = 0;
   S.shake = 0; S.shakeT = 0;
   S.hitstop = 0;
   S.redFlash = 0;
-  S.chainFlash = null; // {n, score, t} 引爆瞬間跳出的連鎖讀數
+  S.chainFlash = null;
   S.time = 0;
-  S.gameOverT = 0;
   S.paused = false;
 }
 reset();
@@ -290,7 +423,7 @@ addEventListener('keydown', e => {
   if (['ArrowLeft','ArrowRight','ArrowUp',' '].includes(e.key)) e.preventDefault();
   const k = e.key.toLowerCase();
   keys[k] = true;
-  if (k === 'j' && !e.repeat) tryShoot(); // 直接觸發，避免快速點按落在兩幀之間被吃掉
+  if (k === 'j' && !e.repeat) tryShoot(); // 直接觸發，避免快速點按被吃掉
   if (k === 'p') S.paused = !S.paused;
   if (k === 'r') reset();
 });
@@ -304,7 +437,7 @@ const inputJump  = () => keys['arrowup'] || keys[' '] || keys['w'];
 const inputShoot = () => keys['j'];
 
 // ---------------------------------------------------------------------
-// 物理輔助：對「站得上去的東西」做地板/平台判定
+// 物理：牆 / 地板 / 單向平台
 // ---------------------------------------------------------------------
 function moveActor(a, dt) {
   a.vy += GRAVITY * dt;
@@ -313,16 +446,13 @@ function moveActor(a, dt) {
   a.y += a.vy * dt;
   a.onGround = false;
 
-  // 牆
-  if (a.x < WALL + a.r) { a.x = WALL + a.r; a.vx = Math.abs(a.vx) * (a.bounceWall ? 1 : 0); if (a.dir) a.dir = 1; }
-  if (a.x > W - WALL - a.r) { a.x = W - WALL - a.r; a.vx = -Math.abs(a.vx) * (a.bounceWall ? 1 : 0); if (a.dir) a.dir = -1; }
+  if (a.x < WALL + a.r) { a.x = WALL + a.r; if (a.dir) a.dir = 1; }
+  if (a.x > W - WALL - a.r) { a.x = W - WALL - a.r; if (a.dir) a.dir = -1; }
 
-  // 地板
   if (a.y > FLOOR_Y - a.r) {
-    if (a.vy > 260) a.landPop = Math.min(1, a.vy / 900); // 落地反彈量
+    if (a.vy > 260) a.landPop = Math.min(1, a.vy / 900);
     a.y = FLOOR_Y - a.r; a.vy = 0; a.onGround = true;
   }
-  // 單向平台：只有下落中、且前一幀在平台上方才著陸
   if (a.vy >= 0) {
     for (const p of PLATFORMS) {
       if (a.x > p.x - 4 && a.x < p.x + p.w + 4 &&
@@ -344,22 +474,19 @@ function tryShoot() {
   const p = S.player;
   if (p.dead || p.shootCd > 0 || S.paused) return;
   p.shootCd = 0.32;
-  S.shots.push({ x: p.x + p.facing * (p.r + 6), y: p.y - 4, vx: p.facing * 460, r: 15, life: 1.15 });
-  p.sx = 1.22; p.sy = 0.85; // 吐泡泡的推擠感
+  const mk = (oy, ovx) => S.shots.push({ x: p.x + p.facing * (p.r + 6), y: p.y - 4 + oy, vx: p.facing * (460 + ovx), r: 15, life: 1.15 });
+  if (p.dualT > 0) { mk(-11, 40); mk(7, -30); } // 雙泡能力（§5.5 橙）
+  else mk(0, 0);
+  p.sx = 1.22; p.sy = 0.85;
 }
 
 function updatePlayer(dt) {
   const p = S.player;
-  if (p.dead) {
-    p.deadT -= dt;
-    if (p.deadT <= 0) {
-      if (S.lives <= 0) { S.gameOverT += dt; return; }
-      p.dead = false; p.x = W / 2; p.y = FLOOR_Y - p.r; p.vx = p.vy = 0; p.invuln = 2.0;
-    }
-    return;
-  }
+  if (p.dead) return;
   p.invuln = Math.max(0, p.invuln - dt);
   p.shootCd = Math.max(0, p.shootCd - dt);
+  p.dualT = Math.max(0, p.dualT - dt);
+  p.starT = Math.max(0, p.starT - dt);
 
   let ax = 0;
   if (inputLeft())  { ax -= 1; p.facing = -1; }
@@ -369,44 +496,70 @@ function updatePlayer(dt) {
   p.coyote = p.onGround ? 0.09 : Math.max(0, p.coyote - dt);
   if (inputJump() && p.coyote > 0) {
     p.vy = -P_JUMP; p.coyote = 0;
-    p.sx = 0.78; p.sy = 1.3; // 起跳拉長
+    p.sx = 0.78; p.sy = 1.3;
   }
   if (inputShoot()) tryShoot();
 
   moveActor(p, dt);
   if (p.landPop) { p.sx = 1 + p.landPop * 0.45; p.sy = 1 - p.landPop * 0.35; p.landPop = 0; }
-
-  // squash & stretch 回彈
   p.sx += (1 - p.sx) * Math.min(1, dt * 14);
   p.sy += (1 - p.sy) * Math.min(1, dt * 14);
 
-  // 身體碰觸敵泡泡 → 引爆（§5）
+  // 無敵星拖尾星屑
+  if (p.starT > 0 && Math.random() < dt * 30) {
+    S.particles.push({ x: p.x + (Math.random() - 0.5) * 24, y: p.y + (Math.random() - 0.5) * 24,
+      vx: (Math.random() - 0.5) * 40, vy: -30 - Math.random() * 40, r: 2 + Math.random() * 2,
+      color: ['#ffd97a', '#7dd3fc', '#f9a8d4'][(Math.random() * 3) | 0], t: 0.35 });
+  }
+
+  // 身體碰觸敵泡泡 → 引爆（§5）。剛被星星困住的泡泡有短暫保護
   for (let i = 0; i < S.bubbles.length; i++) {
     const b = S.bubbles[i];
+    if ((b.graceT || 0) > 0) continue;
     if (dist(p, b) < p.r + b.r - 4) { detonate(i); break; }
   }
-  // 碰到自由 / 暴走敵人 → 受傷（§2.1）
-  if (p.invuln <= 0) {
-    for (const e of S.enemies) {
-      if ((e.state === 'FREE' || e.state === 'ENRAGED') && dist(p, e) < p.r + e.r - 4) {
-        killPlayer(); break;
-      }
+
+  // 碰到自由 / 暴走敵人
+  for (let j = S.enemies.length - 1; j >= 0; j--) {
+    const e = S.enemies[j];
+    if (dist(p, e) >= p.r + e.r - 4) continue;
+    if (p.starT > 0) {
+      // 無敵星（§5.5 紅）：自動把敵人困成泡泡（不是清除）
+      S.enemies.splice(j, 1);
+      S.bubbles.push({
+        x: e.x, y: e.y - 6, r: 21, age: 0,
+        phase: Math.random() * Math.PI * 2,
+        vx: (e.x - p.x) * 3, vy: -60,
+        pop0: 0.4, graceT: 0.6,
+      });
+      burst(e.x, e.y, '#ffd97a', 10);
+      S.popups.push({ x: e.x, y: e.y - 24, text: '變泡泡！', color: '#ffd97a', t: 0.8, big: false });
+    } else if (p.invuln <= 0) {
+      hitPlayer();
+      break;
     }
   }
 }
 
-function killPlayer() {
+// 被敵人碰到：扣 1 血 + 2 秒無敵（§2.1 血量制）
+function hitPlayer() {
   const p = S.player;
-  p.dead = true; p.deadT = 1.1;
-  S.lives--;
-  S.redFlash = Math.max(S.redFlash, 0.5);
-  S.shake = Math.max(S.shake, 10); S.shakeT = 0.3;
-  burst(p.x, p.y, '#7dd3fc', 22);
+  p.hp--;
+  S.redFlash = Math.max(S.redFlash, 0.45);
+  S.shake = Math.max(S.shake, 9); S.shakeT = 0.25;
+  burst(p.x, p.y, '#7dd3fc', 18);
+  if (p.hp <= 0) {
+    p.dead = true;
+    S.shake = 12; S.shakeT = 0.4;
+  } else {
+    p.invuln = 2.0;
+    p.vy = Math.min(p.vy, -280); // 輕微擊飛，把「被碰」演出來
+    S.popups.push({ x: p.x, y: p.y - 26, text: '-1 ♥', color: '#ff4d5e', t: 0.9, big: false });
+  }
 }
 
 // ---------------------------------------------------------------------
-// 敵人（§2.2 狀態機：FREE / TRAPPED / ENRAGED / DEAD）
-// TRAPPED 的敵人不在 S.enemies；牠活在 S.bubbles 裡（泡泡即狀態）。
+// 敵人（§2.2 狀態機）。TRAPPED 的敵人活在 S.bubbles 裡。
 // ---------------------------------------------------------------------
 const E_SPEED = 78, ENRAGE_MULT = 1.6;
 const SPAWN_POINTS = [ { x: 200, y: 60 }, { x: W - 200, y: 60 }, { x: W / 2, y: 60 } ];
@@ -414,14 +567,13 @@ const MAX_LOOSE = 8, MAX_TOTAL = 18;
 
 function spawnEnemy() {
   const loose = S.enemies.length;
-  const total = loose + S.bubbles.length;
-  if (loose >= MAX_LOOSE || total >= MAX_TOTAL) return;
+  if (loose >= MAX_LOOSE || loose + S.bubbles.length >= MAX_TOTAL) return;
   const sp = SPAWN_POINTS[(Math.random() * SPAWN_POINTS.length) | 0];
   S.enemies.push({
     state: 'FREE', x: sp.x + (Math.random() * 60 - 30), y: sp.y,
     vx: 0, vy: 0, r: 15, dir: Math.random() < 0.5 ? -1 : 1,
     onGround: false, invuln: 0, hopT: 1 + Math.random() * 2,
-    sx: 0.4, sy: 0.4, // 生成時從小長大
+    sx: 0.4, sy: 0.4,
   });
 }
 
@@ -437,7 +589,7 @@ function updateEnemies(dt) {
         if (Math.random() < 0.55) { e.vy = -560; e.sx = 0.8; e.sy = 1.25; }
         if (Math.random() < 0.3) e.dir *= -1;
       }
-    } else { // ENRAGED：加速衝向最近玩家（§4）
+    } else { // ENRAGED（§4）
       const chase = Math.sign(p.x - e.x) || e.dir;
       e.dir = chase;
       e.vx = chase * E_SPEED * ENRAGE_MULT;
@@ -454,14 +606,14 @@ function updateEnemies(dt) {
 }
 
 // ---------------------------------------------------------------------
-// 發射泡泡（§2.3）：命中第一個 FREE / ENRAGED（非無敵）敵人即困住
+// 發射泡泡（§2.3）
 // ---------------------------------------------------------------------
 function updateShots(dt) {
   for (let i = S.shots.length - 1; i >= 0; i--) {
     const s = S.shots[i];
-    s.vx *= Math.pow(0.03, dt); // 快速減速
+    s.vx *= Math.pow(0.03, dt);
     s.x += s.vx * dt;
-    if (Math.abs(s.vx) < 60) s.y -= 40 * dt; // 減速後緩緩上飄
+    if (Math.abs(s.vx) < 60) s.y -= 40 * dt;
     s.life -= dt;
     if (s.x < WALL + s.r || s.x > W - WALL - s.r || s.life <= 0) {
       burst(s.x, s.y, '#93c5fd', 5);
@@ -471,13 +623,12 @@ function updateShots(dt) {
       const e = S.enemies[j];
       if (e.invuln > 0) continue; // 暴走短暫無敵：泡泡困不住
       if (dist(s, e) < s.r + e.r - 2) {
-        // 困住 → 敵人轉 TRAPPED，實體移進泡泡（重困則 Tier 重置回 0，§2.2）
         S.enemies.splice(j, 1);
         S.bubbles.push({
           x: e.x, y: e.y, r: 21, age: 0,
           phase: Math.random() * Math.PI * 2,
           vx: s.vx * 0.15, vy: -18,
-          pop0: 0.4, // 剛困住的膨脹動畫
+          pop0: 0.4,
         });
         burst(e.x, e.y, '#4ade80', 8);
         S.shots.splice(i, 1);
@@ -488,22 +639,21 @@ function updateShots(dt) {
 }
 
 // ---------------------------------------------------------------------
-// 敵泡泡：上浮、晃動、彼此軟排斥（叢會自然擠成 popRadius 內的緊叢）
+// 敵泡泡：上浮、晃動、軟排斥
 // ---------------------------------------------------------------------
 function updateBubbles(dt) {
   for (const b of S.bubbles) {
-    b.age += dt * KNOBS.ripenSpeed; // ripenSpeed 越大越快熟（§3）
+    b.age += dt * KNOBS.ripenSpeed;
     b.phase += dt * (2 + tierOf(b.age) * 2.2);
     b.pop0 = Math.max(0, b.pop0 - dt);
+    if (b.graceT) b.graceT = Math.max(0, b.graceT - dt);
 
-    // 上浮至天花板帶
     const targetLift = b.y > BUBBLE_CEIL + 30 ? -26 : 0;
     b.vy += (targetLift - b.vy) * Math.min(1, dt * 2);
     b.vx *= Math.pow(0.4, dt);
     b.x += b.vx * dt;
     b.y += b.vy * dt;
 
-    // 邊界
     b.x = Math.max(WALL + b.r, Math.min(W - WALL - b.r, b.x));
     b.y = Math.max(BUBBLE_CEIL - 30 + Math.sin(b.phase * 0.7) * 8, b.y);
   }
@@ -525,13 +675,12 @@ function updateBubbles(dt) {
 }
 
 // ---------------------------------------------------------------------
-// 掙脫（§4）：每 0.2s 依 Tier 擲骰；成功 → ENRAGED + 震鄰崩盤
+// 掙脫（§4）
 // ---------------------------------------------------------------------
 function updateEscapes(dt) {
   S.escapeClock += dt;
   while (S.escapeClock >= ESCAPE_TICK) {
     S.escapeClock -= ESCAPE_TICK;
-    // 先收集這一 tick 掙脫成功者，再統一處理（含連環崩盤 worklist）
     const escaped = [];
     for (let i = 0; i < S.bubbles.length; i++) {
       if (Math.random() < escapeTickProb(tierOf(S.bubbles[i].age))) escaped.push(i);
@@ -569,7 +718,7 @@ function processEscapes(indices) {
       if (marked.has(nb)) continue;
       if (Math.hypot(nb.x - b.x, nb.y - b.y) <= CASCADE_RADIUS) {
         nb.age += KNOBS.cascadeStrength * 1.0;
-        nb.jolt = 0.35; // 被震的視覺抖動
+        nb.jolt = 0.35;
         if (Math.random() < escapeTickProb(tierOf(nb.age))) {
           marked.add(nb); queue.push(nb);
         }
@@ -579,7 +728,7 @@ function processEscapes(indices) {
 }
 
 // ---------------------------------------------------------------------
-// 引爆與連鎖（§5）：BFS 衝擊波擴散
+// 引爆與連鎖（§5）+ Tier 引爆獎勵（§5.5）
 // ---------------------------------------------------------------------
 function detonate(startIdx) {
   const popped = [];
@@ -598,27 +747,42 @@ function detonate(startIdx) {
     }
   }
   const n = popped.length;
-  let sum = 0;
-  let cx = 0, cy = 0;
-  const poppedBubbles = popped.map(i => S.bubbles[i]);
-  for (const b of poppedBubbles) {
+  const p = S.player;
+  let sum = 0, cx = 0, cy = 0;
+  let heals = 0, gotDual = false, gotStar = false;
+  for (const b of popped.map(i => S.bubbles[i])) {
     const t = tierOf(b.age);
     sum += BASE_VALUE * TIERS[t].mult;
     cx += b.x; cy += b.y;
     burst(b.x, b.y, TIERS[t].color, 10 + t * 4);
     S.popups.push({ x: b.x, y: b.y, text: '×' + TIERS[t].mult, color: TIERS[t].color, t: 0.7, big: false });
+    // §5.5 Tier 獎勵
+    if (t === 1) heals += KNOBS.healAmount;
+    if (t === 2) gotDual = true;
+    if (t === 3) gotStar = true;
   }
   cx /= n; cy /= n;
-  const mult = chainMult(n);
-  const total = Math.round(sum * mult);
+  const total = Math.round(sum * chainMult(n));
   S.score += total;
   S.maxChain = Math.max(S.maxChain, n);
 
-  // 移除（由大到小 splice）
+  if (heals > 0 && p.hp < KNOBS.maxHp) {
+    const before = p.hp;
+    p.hp = Math.min(KNOBS.maxHp, p.hp + heals);
+    S.popups.push({ x: cx, y: cy - 66, text: '+' + (p.hp - before) + ' ♥', color: '#f9a8d4', t: 1.1, big: true });
+  }
+  if (gotDual) {
+    p.dualT = KNOBS.dualDur; // 重置不疊加
+    S.popups.push({ x: cx - 50, y: cy - 90, text: '雙泡！', color: '#fb923c', t: 1.1, big: true });
+  }
+  if (gotStar) {
+    p.starT = KNOBS.starDur;
+    S.popups.push({ x: cx + 50, y: cy - 90, text: '★ 無敵星！', color: '#ffd97a', t: 1.2, big: true });
+  }
+
   popped.sort((a, b) => b - a).forEach(i => S.bubbles.splice(i, 1));
 
-  // 爽點回饋（§8）：連鎖越大 → 震動越大 + 定格越長
-  S.chainFlash = { n, score: total, t: 1.1, x: cx, y: cy };
+  S.chainFlash = { n, score: total, t: 1.1 };
   if (n >= 2) {
     S.hitstop = Math.min(0.06 + n * 0.035, 0.3);
     S.shake = Math.max(S.shake, 3 + n * 2.2); S.shakeT = 0.12 + n * 0.05;
@@ -664,7 +828,6 @@ const STEP = 1 / 60;
 
 function update(dt) {
   S.time += dt;
-  // 生成（§7 spawnInterval）
   S.spawnT -= dt;
   if (S.spawnT <= 0) { S.spawnT = KNOBS.spawnInterval; spawnEnemy(); }
 
@@ -675,7 +838,6 @@ function update(dt) {
   updateEscapes(dt);
   updateFx(dt);
 
-  // HUD
   document.getElementById('h-score').textContent = S.score;
   document.getElementById('h-maxChain').textContent = S.maxChain;
   document.getElementById('h-escapes').textContent = S.escapes;
@@ -684,9 +846,10 @@ function update(dt) {
 }
 
 // ---------------------------------------------------------------------
-// 繪製（§8：全程式繪圖，但每個實體都有素材接縫 drawSprite）
+// 繪製（§8：像素素材 + 程式 fallback，接縫在 drawSprite）
 // ---------------------------------------------------------------------
 function draw() {
+  ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, W, H);
   ctx.save();
   if (S.shake > 0) ctx.translate((Math.random() - 0.5) * S.shake * 2, (Math.random() - 0.5) * S.shake * 2);
@@ -700,7 +863,6 @@ function draw() {
 
   ctx.restore();
 
-  // 掙脫紅閃（§8）
   if (S.redFlash > 0) {
     ctx.fillStyle = `rgba(255,40,60,${S.redFlash * 0.4})`;
     ctx.fillRect(0, 0, W, H);
@@ -709,32 +871,39 @@ function draw() {
 }
 
 function drawArena() {
-  // 背景微紋理
   ctx.fillStyle = '#0a0f1c';
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = 'rgba(70,90,160,0.06)';
   for (let y = 40; y < H; y += 80) ctx.fillRect(0, y, W, 1);
 
-  // 牆與地板
-  ctx.fillStyle = '#1e2a4a';
+  // 牆與地板：磚塊 pattern（fallback 素色）
+  ctx.fillStyle = patterns.brick || '#1e2a4a';
   ctx.fillRect(0, 0, WALL, H);
   ctx.fillRect(W - WALL, 0, WALL, H);
   ctx.fillRect(0, FLOOR_Y, W, H - FLOOR_Y);
-  ctx.fillStyle = '#2c3d6b';
-  ctx.fillRect(0, FLOOR_Y, W, 4);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(0, FLOOR_Y, W, 2);
 
+  // 單向平台：草地磚（fallback 素色）
   for (const p of PLATFORMS) {
-    ctx.fillStyle = '#1e2a4a';
-    ctx.fillRect(p.x, p.y, p.w, 12);
-    ctx.fillStyle = '#2c3d6b';
-    ctx.fillRect(p.x, p.y, p.w, 3);
+    if (patterns.grass) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.fillStyle = patterns.grass;
+      ctx.fillRect(0, 0, p.w, 14);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = '#1e2a4a';
+      ctx.fillRect(p.x, p.y, p.w, 12);
+      ctx.fillStyle = '#2c3d6b';
+      ctx.fillRect(p.x, p.y, p.w, 3);
+    }
   }
 }
 
 function drawBubble(b) {
   const t = tierOf(b.age);
   const T = TIERS[t];
-  // 晃動：Tier 越高抖越兇（危險預告，§10.3）
   const wob = [0.6, 1.4, 3.2, 5.5][t] + (b.jolt ? 6 : 0);
   if (b.jolt) b.jolt = Math.max(0, b.jolt - STEP);
   const ox = Math.sin(b.phase * 2.1) * wob;
@@ -743,35 +912,31 @@ function drawBubble(b) {
   const grow = 1 + b.pop0 * 0.5 + Math.sin(b.phase) * 0.03;
   const r = b.r * grow;
 
-  // 紅閃：Tier 3 快速閃爍
   let flash = 1;
-  if (t === 3) flash = 0.55 + 0.45 * Math.abs(Math.sin(S.time * 14));
+  if (t === 3) flash = 0.55 + 0.45 * Math.abs(Math.sin(S.time * 14)); // 過熟紅閃
 
   ctx.save();
   ctx.globalAlpha = flash;
 
-  const usedSprite = drawSprite('bubble', x, y, r * 2.3, r * 2.3, {});
-  if (usedSprite) {
-    // 素材泡泡：套 Tier 色光暈（讓熟成資訊不因換圖而消失）
-    ctx.globalAlpha = 0.45 * flash;
-    ctx.strokeStyle = T.color;
-    ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(x, y, r + 3, 0, Math.PI * 2); ctx.stroke();
+  if (bubbleTiers) {
+    // 像素泡泡：Tier 著色快取（外框 + 內填 + 高光）
+    ctx.drawImage(bubbleTiers[t], x - r * 1.15, y - r * 1.15, r * 2.3, r * 2.3);
+    // 裡面的敵人
+    ctx.globalAlpha = 0.95 * flash;
+    drawSprite('enemy', x, y + 1, r * 1.25, {});
   } else {
-    // 程式泡泡：半透明填色 + 內側高光弧（§8）
+    // 程式泡泡 fallback（§8 v0.1）
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fillStyle = hexA(T.color, 0.22); ctx.fill();
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = hexA(T.color, 0.9); ctx.stroke();
     ctx.beginPath(); ctx.arc(x - r * 0.32, y - r * 0.32, r * 0.42, Math.PI * 0.9, Math.PI * 1.6);
     ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 2.5; ctx.stroke();
-
-    // 泡泡裡的敵人剪影
     ctx.globalAlpha = 0.9 * flash;
-    if (!drawSprite('enemy', x, y + 2, r * 1.1, r * 1.1, {})) {
+    if (!drawSprite('enemy', x, y + 2, r * 1.1, {})) {
       ctx.beginPath(); ctx.arc(x, y + 2, r * 0.52, 0, Math.PI * 2);
       ctx.fillStyle = hexA(T.color, 0.55); ctx.fill();
-      drawEyes(x, y, r * 0.5, 0, t >= 2); // 高 Tier 眼神變兇
+      drawEyes(x, y, r * 0.5, 0, t >= 2);
     }
   }
   ctx.restore();
@@ -779,7 +944,11 @@ function drawBubble(b) {
 
 function drawShot(s) {
   ctx.save();
-  if (!drawSprite('bubble', s.x, s.y, s.r * 2.2, s.r * 2.2, { alpha: 0.8 })) {
+  if (bubbleTiers) {
+    ctx.globalAlpha = 0.85;
+    // 用未熟成（綠）以外的中性外框：直接用素材原圖
+    drawSprite('bubble', s.x, s.y, s.r * 2.1, {});
+  } else {
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(147,197,253,0.18)'; ctx.fill();
     ctx.strokeStyle = 'rgba(147,197,253,0.9)'; ctx.lineWidth = 2; ctx.stroke();
@@ -791,19 +960,25 @@ function drawShot(s) {
 
 function drawEnemy(e) {
   const enraged = e.state === 'ENRAGED';
-  const w = e.r * 2 * e.sx, h = e.r * 2 * e.sy;
-  const slot = enraged ? (ASSETS.enemyEnraged ? 'enemyEnraged' : 'enemy') : 'enemy';
   ctx.save();
   if (enraged && e.invuln > 0) ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(S.time * 20));
-  if (!drawSprite(slot, e.x, e.y, w * 1.15, h * 1.15, { flip: e.dir < 0 })) {
+  const size = e.r * 2.4;
+  const opts = { flip: e.dir < 0, sx: e.sx, sy: e.sy };
+  let drawn = false;
+  if (enraged) {
+    if (USER_SET.has('enemyEnraged') && ASSETS.enemyEnraged) drawn = drawSprite('enemyEnraged', e.x, e.y, size, opts);
+    else if (enragedAuto) drawn = drawSprite(enragedAuto, e.x, e.y, size, opts);
+  }
+  if (!drawn) drawn = drawSprite('enemy', e.x, e.y, size, opts);
+  if (!drawn) {
+    const w = e.r * 2 * e.sx, h = e.r * 2 * e.sy;
     ctx.beginPath();
     ctx.ellipse(e.x, e.y, w / 2, h / 2, 0, 0, Math.PI * 2);
     ctx.fillStyle = enraged ? '#ff4d5e' : '#a78bfa';
     ctx.fill();
     if (enraged) { ctx.strokeStyle = '#ffd0d5'; ctx.lineWidth = 2; ctx.stroke(); }
     drawEyes(e.x, e.y - h * 0.12, e.r * 0.9, e.dir, enraged);
-  } else if (enraged && slot === 'enemy') {
-    // 沒給暴走素材時，用紅色光暈標記暴走
+  } else if (enraged && !enragedAuto && !USER_SET.has('enemyEnraged')) {
     ctx.strokeStyle = 'rgba(255,77,94,0.9)'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 5, 0, Math.PI * 2); ctx.stroke();
   }
@@ -821,7 +996,7 @@ function drawEyes(x, y, r, dir, angry) {
     if (angry) {
       ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(ex - s * r * 0.22, ey - r * 0.3 - s * 0 + (s < 0 ? 0 : 0));
+      ctx.moveTo(ex - s * r * 0.22, ey - r * 0.3);
       ctx.lineTo(ex + s * r * 0.18, ey - r * 0.16);
       ctx.stroke();
     }
@@ -833,15 +1008,22 @@ function drawPlayer() {
   if (p.dead) return;
   const blink = p.invuln > 0 && Math.floor(S.time * 12) % 2 === 0;
   if (blink) return;
-  const w = p.r * 2 * p.sx, h = p.r * 2 * p.sy;
   ctx.save();
-  if (!drawSprite('player', p.x, p.y, w * 1.2, h * 1.2, { flip: p.facing < 0 })) {
+  if (p.starT > 0) {
+    // 無敵星：彩虹色相循環（結束前 2 秒加速）
+    const speed = p.starT < 2 ? 900 : 360;
+    ctx.filter = `hue-rotate(${(S.time * speed) % 360}deg) saturate(1.6) brightness(1.15)`;
+  }
+  const size = p.r * 2.6;
+  // 內嵌的 dino 原圖面向左；使用者上傳的素材則假設面向右
+  const flip = USER_SET.has('player') ? p.facing < 0 : p.facing > 0;
+  if (!drawSprite('player', p.x, p.y, size, { flip, sx: p.sx, sy: p.sy })) {
+    const w = p.r * 2 * p.sx, h = p.r * 2 * p.sy;
     ctx.beginPath();
     ctx.ellipse(p.x, p.y, w / 2, h / 2, 0, 0, Math.PI * 2);
     ctx.fillStyle = '#38d6ae'; ctx.fill();
     ctx.strokeStyle = '#a9f5e2'; ctx.lineWidth = 2; ctx.stroke();
     drawEyes(p.x, p.y - h * 0.12, p.r, p.facing, false);
-    // 嘴（面向）
     ctx.beginPath();
     ctx.arc(p.x + p.facing * p.r * 0.45, p.y + p.r * 0.22, p.r * 0.16, 0, Math.PI * 2);
     ctx.fillStyle = '#0c5c47'; ctx.fill();
@@ -852,13 +1034,13 @@ function drawPlayer() {
 function drawFx() {
   for (const p of S.particles) {
     ctx.globalAlpha = Math.min(1, p.t * 3);
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = p.color; ctx.fill();
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); // 像素方塊粒子
   }
   ctx.globalAlpha = 1;
   for (const p of S.popups) {
     ctx.globalAlpha = Math.min(1, p.t * 2.5);
-    ctx.font = p.big ? 'bold 26px sans-serif' : 'bold 14px sans-serif';
+    ctx.font = p.big ? 'bold 26px "Courier New", monospace' : 'bold 14px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.fillStyle = p.color;
     ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3;
@@ -869,16 +1051,45 @@ function drawFx() {
 }
 
 function drawHudOverlay() {
-  // 左上：分數 + 命
+  // 左上：分數
   ctx.textAlign = 'left';
-  ctx.font = 'bold 22px sans-serif';
+  ctx.font = 'bold 24px "Courier New", monospace';
   ctx.fillStyle = '#fff';
-  ctx.fillText(String(S.score), 30, 38);
-  ctx.font = '14px sans-serif';
-  ctx.fillStyle = '#ff8a94';
-  ctx.fillText('♥'.repeat(Math.max(0, S.lives)), 30, 60);
+  ctx.fillText(String(S.score), 30, 40);
 
-  // 引爆瞬間的連鎖讀數（§7 HUD：當前連鎖數跳出）
+  // 血量：像素愛心（§2.1）
+  const hp = S.player.hp, max = KNOBS.maxHp;
+  for (let i = 0; i < max; i++) {
+    const hx = 30 + i * 22, hy = 50;
+    if (ASSETS.heart) {
+      ctx.globalAlpha = i < hp ? 1 : 0.22;
+      drawSprite('heart', hx + 9, hy + 8, 18, {});
+    } else {
+      ctx.globalAlpha = i < hp ? 1 : 0.22;
+      ctx.fillStyle = '#ff6b81';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('♥', hx, hy + 14);
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // 能力倒數
+  let py = 86;
+  const p = S.player;
+  if (p.dualT > 0) {
+    ctx.font = 'bold 13px "Courier New", monospace';
+    ctx.fillStyle = '#fb923c';
+    ctx.fillText('雙泡 ' + p.dualT.toFixed(1) + 's', 30, py);
+    py += 18;
+  }
+  if (p.starT > 0) {
+    if (ASSETS.sun) drawSprite('sun', 38, py - 5, 16, {});
+    ctx.font = 'bold 13px "Courier New", monospace';
+    ctx.fillStyle = '#ffd97a';
+    ctx.fillText((ASSETS.sun ? '     ' : '★ ') + '無敵 ' + p.starT.toFixed(1) + 's', 30, py);
+  }
+
+  // 引爆瞬間的連鎖讀數
   if (S.chainFlash) {
     const c = S.chainFlash;
     const a = Math.min(1, c.t * 2);
@@ -888,13 +1099,13 @@ function drawHudOverlay() {
     ctx.translate(W / 2, 90);
     ctx.scale(scale, scale);
     ctx.textAlign = 'center';
-    ctx.font = 'bold 40px sans-serif';
+    ctx.font = 'bold 40px "Courier New", monospace';
     ctx.fillStyle = c.n >= 4 ? '#ffb020' : '#fff';
     ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 5;
     const txt = c.n + ' 連鎖！';
     ctx.strokeText(txt, 0, 0);
     ctx.fillText(txt, 0, 0);
-    ctx.font = 'bold 20px sans-serif';
+    ctx.font = 'bold 20px "Courier New", monospace';
     ctx.fillStyle = '#ffd97a';
     ctx.strokeText('+' + c.score, 0, 28);
     ctx.fillText('+' + c.score, 0, 28);
@@ -905,18 +1116,18 @@ function drawHudOverlay() {
     ctx.fillStyle = 'rgba(5,8,18,0.6)';
     ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center';
-    ctx.font = 'bold 34px sans-serif';
+    ctx.font = 'bold 34px "Courier New", monospace';
     ctx.fillStyle = '#fff';
     ctx.fillText('暫停中（P 繼續）', W / 2, H / 2);
   }
-  if (S.lives <= 0 && S.player.dead) {
+  if (S.player.dead) {
     ctx.fillStyle = 'rgba(5,8,18,0.65)';
     ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center';
-    ctx.font = 'bold 36px sans-serif';
+    ctx.font = 'bold 36px "Courier New", monospace';
     ctx.fillStyle = '#ff4d5e';
     ctx.fillText('崩盤結束', W / 2, H / 2 - 20);
-    ctx.font = '18px sans-serif';
+    ctx.font = '18px "Courier New", monospace';
     ctx.fillStyle = '#dbe4ff';
     ctx.fillText(`總分 ${S.score} ／ 最大連鎖 ${S.maxChain} ／ 掙脫 ${S.escapes} 次`, W / 2, H / 2 + 16);
     ctx.fillText('按 R 重開', W / 2, H / 2 + 44);
@@ -930,14 +1141,13 @@ function hexA(hex, a) {
 
 // ---------------------------------------------------------------------
 // 主迴圈：requestAnimationFrame + accumulator 固定時間步（§9）
-// hitstop（引爆定格）凍結更新但保留繪製，是 jackpot 體感的一部分。
 // ---------------------------------------------------------------------
 let last = performance.now(), acc = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   let dt = (now - last) / 1000;
   last = now;
-  if (dt > 0.1) dt = 0.1; // 分頁切走保護
+  if (dt > 0.1) dt = 0.1;
 
   if (!S.paused) {
     if (S.hitstop > 0) {
@@ -951,9 +1161,15 @@ function frame(now) {
 }
 requestAnimationFrame(frame);
 
+// 載入內嵌預設素材（KAPLAY crew, MIT）
+const EMBED_SLOTS = { player: 'dino', enemy: 'ghosty', bubble: 'circle', heart: 'heart', sun: 'sun', grass: 'grass', brick: 'brick' };
+for (const [slot, key] of Object.entries(EMBED_SLOTS)) {
+  if (EMBED[key]) loadAsset(slot, 'data:image/png;base64,' + EMBED[key], false);
+}
+
 // Debug 出口：console 可直接戳內部狀態做調參實驗
 // 例：__BB.KNOBS.escapeRate = 1.8; __BB.S.bubbles[0].age = 4.6;
-window.__BB = { S, KNOBS, TIERS, tierOf, chainMult, spawnEnemy, detonate, processEscapes };
+window.__BB = { S, KNOBS, TIERS, tierOf, chainMult, spawnEnemy, detonate, processEscapes, hitPlayer, applyPreset };
 </script>
 </body>
 </html>
