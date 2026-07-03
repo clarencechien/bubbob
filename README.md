@@ -1,7 +1,13 @@
 # bubbob — 強化版泡泡龍「蓄能引爆」手感原型
 
-單一 `index.html`（vanilla JS + Canvas 2D，零相依、零 build），直接用瀏覽器打開即玩。
+單一 HTML（vanilla JS + Canvas 2D，零相依、零 build），直接用瀏覽器打開 `public/index.html` 即玩。
 規格見 [SPEC.md](SPEC.md)（v0.3）。
+
+## 部署（Cloudflare Workers）
+
+已附 `wrangler.jsonc`（assets-only，靜態上傳 `public/`）。Workers Builds 的
+deploy 指令維持 `npx wrangler versions upload` 就會動；本機手動部署則是
+`npx wrangler deploy`。沒有 Worker 程式碼、沒有 build step。
 
 ## 玩法
 
