@@ -166,7 +166,7 @@
     <div class="asset-slot" id="slot-bubble"><span class="name">泡泡（自動套 Tier 色）</span><input type="file" accept="image/*" data-slot="bubble"></div>
   </div>
   <div class="help">
-    預設素材：KAPLAY crew（MIT）。上傳圖片即時替換；squash &amp; stretch、Tier 著色、閃爍照常套用。console 亦可 <kbd>loadAsset('player', url)</kbd>。
+    玩家／敵人為自繪 32x32 像素圖；上傳圖片可即時替換；squash &amp; stretch、Tier 著色、閃爍照常套用。console 亦可 <kbd>loadAsset('player', url)</kbd>。
   </div>
 
   <button id="resetBtn">重開一局（R）</button>
@@ -246,13 +246,15 @@ function applyPreset(name) {
 }
 
 // ---------------------------------------------------------------------
-// 素材：預設為內嵌的 KAPLAY crew 像素圖（MIT, © KAPLAY Team）。
+// 素材：玩家小龍與敵人為本專案自繪 32x32 像素圖（tools/pixelart.py 產生，
+// 原檔在 assets/）；UI／地形（心心、太陽、泡泡框、草地、磚牆）仍為
+// KAPLAY crew 像素圖（MIT, © KAPLAY Team）。
 // 所有實體都經由 drawSprite() 繪製，上傳 / loadAsset 可即時替換，
 // squash & stretch、Tier 著色、閃爍照常套用 —— 正式美術只要換圖。
 // ---------------------------------------------------------------------
 const EMBED = {
-  dino: "iVBORw0KGgoAAAANSUhEUgAAACYAAAAyCAYAAAAweqkjAAAAAXNSR0IArs4c6QAAAk5JREFUWIXFWL1uwkAMvqAu3cITBKkbTK2qTkxdGOjGW/A6rXgLNhi6MDFW7QRbJXgCsnWkUyLH2D774sAnVdDDd/7y+SdOQkhAkQ/PWjutLUZm3QAdHcs9ux8Tkmwp9KzEJOexdQtMxCiHeA3+v3x6Fve6EYMOKacUKWjXOTHsnCOFYSmGVsQkElYbjDutIXels++v6BomVuTDc6xK1SXsUWkYErnWoWwD6WIzrSGH8WIatdnO1+LvlHL1gpWUhhAFjiQml0SMIiWporWH5NhQ4kqClQYdxcKUSq5V8mtJcbYU2Uqci6SjVKPUwo4Op12YPs4uHK1/lmHQH4lk8FnHcp+pGyzGeDFtHAidQ3DrMZANjisEa9Jr9lNnHMt91rrBatuGpb0U+fCsnkCth1uBVbvpLUmCOvlT1IIq4GKJnacOpZWYpfFStjcPJdf9k/tYDFjh7XxtupVdTTFtKlT3SjfFLI2WA5wuXBTzJhWCA7EuSIXgGMoUSA8jnRCzvkChIM5jEFJVSeFMJdnIMWnuT80ll/dj1SFvn68No9VkU3/XzlQYye/HOFJ47VrK9fCmj5d30pAiXMGjZWA0cuxw2oVBf9QIXYwIHmW8hskeJfHhtAuryab+qyCFFBLyIFcrVqlVfUJoyXlCfUviyIXQzbNAFoKtYrgiKH/v6+/aFycSWMW4Q7jCyB/+RFJWiFcgKUkphxsx9SCrJWYae2AuYeU0dwcLzNMFVIIKq1sfS9nEOfeszuQcS0FnOXZNRK/ASzXr2KMybksuZYr9B9UmNx1MLzDWAAAAAElFTkSuQmCC",
-  ghosty: "iVBORw0KGgoAAAANSUhEUgAAADQAAAA8CAYAAAApK5mGAAAAAXNSR0IArs4c6QAAAgRJREFUaIHtmktywyAMhmWPD5CcIFnHM7lbTtK7dSZexyeIb5BuSsfFgB4grKb8q9Yg0IfEwzgdCHU6XF5SW6rmZeq4NmyDGiC+OGDkinuA+KKAoRUsgKyFQSULKTAfn3euT6hu1zFZnoKKFqRgNCBCSoHFoIIPYzC1QHzFwEJQmwfWYNYKgflQv/6xDOOEQfXuj78AQ1GfKrQIE/JpHYzBf5AydEqtPpJBKNleB0ADwvYGiSOcNjF/3DwKplwuDGZzu47sNrH6LijJOZSrkBOSweHYokA5DpSwjymW0j338Pl4xudGqqxWe6oph0niMKYNELY6nY9j0JHH8w7nIy+9uPUpEkUo5EjMuZoDBEAAyjktUG05A4SJFCEJVMxG+zhFTjmOI1hdKRRmdzpcXp2/bNc8kFL3KM65csjyKFMag7frPqShBmRdDci6GpB1NSDrakDW1YCsS3zaLn0dXEoiIOw9xpVjYJT3Ie7gsFOOc3GIXQeX7g+ACaR1C1qy3+w3Vv+T4N4/AyADUb5vlmxLOjBvt2yLgaTR0W6rRci6/ieQ9mfEkqoeIW3AzT7kn8O4+8+8TJv78ppRGkIO1HSi5JINIEg5igNUJ0vDAHwDaTiA1eXCUDPmZw6tOwiloGQ0NSKwVghStcNcSQ6ob7WxzsvUmY4QAD1KLr3NAwHgUOu5+gU1E/8vo/BmaAAAAABJRU5ErkJggg==",
+  dragon: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABOUlEQVR42u2XsQ0CMQxFb4irEBILICZAomAL5mAKmpsAVoFRWICa8pBPGFnGduLY6Boi/QJs/F8SKwld9x+VY7Fcj6CsPLf583GbZBWvzQsBaMVrclLMaXFcbpSWl7b/XMf76SMp/pMmpKaa0gFqjSWQ2cxBu+shBsHN+bBiYI5qhtAA+n6lAmAsDGDNHkxAGkAKhLT3EgAa8Bg1dwNQ83G4TCrt89d4/64Jwup8LEZnKc1YUhgAi1gGYQDpxJMKSbLMN8O+fEJCEBJRWjG6/3Dp8O+4MZcKwQE0CH7rUVnGKQCWOcoydwG0mNdAiAC8ifhnj7kEYb4TpA7mnR0BKHb+eN7OD8Ah6Lsv0gOuw0fbJ9qc6eY1cC3nQPgxopnTwrgiONvwJeQFqL0L0ldBK+jJDf0xycqF8QKMoaWrmhWQLwAAAABJRU5ErkJggg==",
+  grump: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABEElEQVR42u2XzQ3CMAyFO0RPCMQC7MCdGZiAA4MglmETluFclEquolfjvDhu4YClJ1Vt4/fFzV+77h+/HpvtYUhaq90syeX4HFWTzNvOTMQm87ShEmEyKXEupp3rO6JB0uM+zKRBNY8DBNKMNZBFZgJjjpUI7XUJRJ7fzq9JzbOA7XVuinJBoDmGZozRBFEC0HoaBqCVXqLv96M0AHn2CZKG+DkAa4CxqloRBSDKuHpJxrncahwGwIDhZpQq6QbIP0O6d9pdpwFmXWs7YvWuiBACwChkS9bKzQI0ld+CyE2k3HidA4Qdy6yRXVLYlvw1czyascahBxJP78OqYM1p1OoAnvcW/UEJ+ykpDcSI9yTeDba6oMc8EVoAAAAASUVORK5CYII=",
   circle: "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAElJREFUOI1jYKAQMOKS+P///38UhYyMONViaETXjE8cr60kqSFGMza1TMRqItpEUvVQ7IKBNwAOBjYWSHEFUamRlKRM/cxEKgAAUqZPxel/OhQAAAAASUVORK5CYII=",
   heart: "iVBORw0KGgoAAAANSUhEUgAAACcAAAAiCAYAAADcbsCGAAAAAXNSR0IArs4c6QAAASpJREFUWIXVmMEVgjAMhtM+B3AD796cyFF4jsJE3LizARvoSV/FJE3SBOp/g1d+PtKQNk2wgy7n61MyblnnVF4namDNcGvUAkX5oi/QmGKQFijM08W4BGwFKz2/4FqMl3VO3PPTMJLP3h53Ho4y3ppiRpw4KM63Cqf9WisY5ZetxpoXS4T5ZQB7rnGAHvCnVuNpGD9T4h1NFE4rb6i3yJzrQdmraEao78htb0Tlj0X/Fbme9AOnXTsj1XfkJDvaPaRa+I/Wss4Jhesl7zKArFmJFBUMclr3ih61RQc4OOdqAag2OFHLGQVWplg1chHTKwEDUPStHhHkPhT7KdUdvxZSEnmqWpjPSlrbxhoYAAP3VtROWVJbRcXXE1BT8MUDvU6ONDItW9bDQK1eux+SirvKsYAAAAAASUVORK5CYII=",
   sun: "iVBORw0KGgoAAAANSUhEUgAAADoAAAA2CAYAAACWeYpTAAAAAXNSR0IArs4c6QAAAcVJREFUaIHtmkGOwyAMRWmUA+QG0ai7XKvnmmt1Nxr1Br1BZhUJUSDY/ti407+q1MTwsAHjEIKS1mXb12XbtdpLddFoJAV8PO8q7caatBu00gf03fQBfTdlV794lUStkIdNixU3hAxobq+z6tyZKIPnMnTT5KMlEXkBzY2OZUaTituXeZSO9J4eReOUBamHx2ttclJK8Sj2DmuUp9lGNOctApZl4Azy5/fWbOv69d30nBQWCkoBrKkEL4Elv5iDRAHGysGqgWpBHkLCusyMOBKB9vRmyT53tW8GtUoDUbBsj/b2Jlou5ihiUF2A5kQNXzegUq/OIYxRYEapVCGZcn+MdNCmqNTvddl2N6Er1ZQLU6+hW+r343m/zLUHPKrE8n9Cl/ti64EZJWl7zaCW4Y0YVFHoangVVW0YtsIQArakAqsZIWFrkWJeYUCFcQ/IEDrVdTnePRsok3LnIUR9tzfgoaE/SSC3NJghJHCPPRtqEAHbKzE5Ncq5z0AF1si6yN89rU863EsfxX10xCoD9d5CLFLCYO3NVBRY1dOL5VXWImgMhoLM/aZI0o/qrZTRQlUid6UUbqTB7xlpiBNp7jzqQpar7h/B/O9R1trkygAAAABJRU5ErkJggg==",
@@ -1116,8 +1118,7 @@ function drawPlayer() {
     }
   }
   const size = p.r * 2.6;
-  // 內嵌的 dino 原圖面向左；使用者上傳的素材則假設面向右
-  const flip = USER_SET.has('player') ? p.facing < 0 : p.facing > 0;
+  const flip = p.facing < 0; // 素材（內嵌自繪龍與上傳圖）一律視為面向右
   if (!drawSprite('player', p.x, p.y, size, { flip, sx: p.sx, sy: p.sy })) {
     const w = p.r * 2 * p.sx, h = p.r * 2 * p.sy;
     ctx.beginPath();
@@ -1263,7 +1264,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // 載入內嵌預設素材（KAPLAY crew, MIT）
-const EMBED_SLOTS = { player: 'dino', enemy: 'ghosty', bubble: 'circle', heart: 'heart', sun: 'sun', grass: 'grass', brick: 'brick' };
+const EMBED_SLOTS = { player: 'dragon', enemy: 'grump', bubble: 'circle', heart: 'heart', sun: 'sun', grass: 'grass', brick: 'brick' };
 for (const [slot, key] of Object.entries(EMBED_SLOTS)) {
   if (EMBED[key]) loadAsset(slot, 'data:image/png;base64,' + EMBED[key], false);
 }

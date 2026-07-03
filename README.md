@@ -17,7 +17,8 @@
 
 ## 素材
 
-目前內嵌的過渡素材取自 [KAPLAY](https://github.com/kaplayjs/kaplay) crew sprites（MIT License, © KAPLAY Team），base64 內嵌。
+玩家小龍與敵人是**本專案自繪的 32×32 原創像素圖**（`tools/pixelart.py` 產生，原檔在 `assets/`，可自由取用）。
+UI 與地形（心心、太陽、泡泡外框、草地、磚牆）取自 [KAPLAY](https://github.com/kaplayjs/kaplay) crew sprites（MIT License, © KAPLAY Team）。全部 base64 內嵌。
 
 ### 自行更換素材（OpenGameArt 等）
 
