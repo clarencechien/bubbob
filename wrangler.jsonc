@@ -1,14 +1,10 @@
+// Cloudflare Workers（靜態資產模式）部署設定
+// Workers Builds 的 deploy 指令用 `npx wrangler versions upload` 即可，
+// 沒有 Worker 程式碼，純上傳 public/ 靜態檔。
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bubbob",
   "compatibility_date": "2026-07-03",
-  "observability": {
-    "enabled": true
-  },
   "assets": {
-    "directory": "."
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+    "directory": "./public"
+  }
 }
