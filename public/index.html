@@ -269,8 +269,12 @@ function applyPreset(name) {
 // squash & stretch、Tier 著色、閃爍照常套用 —— 正式美術只要換圖。
 // ---------------------------------------------------------------------
 const EMBED = {
-  dragon: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABOUlEQVR42u2XsQ0CMQxFb4irEBILICZAomAL5mAKmpsAVoFRWICa8pBPGFnGduLY6Boi/QJs/F8SKwld9x+VY7Fcj6CsPLf583GbZBWvzQsBaMVrclLMaXFcbpSWl7b/XMf76SMp/pMmpKaa0gFqjSWQ2cxBu+shBsHN+bBiYI5qhtAA+n6lAmAsDGDNHkxAGkAKhLT3EgAa8Bg1dwNQ83G4TCrt89d4/64Jwup8LEZnKc1YUhgAi1gGYQDpxJMKSbLMN8O+fEJCEBJRWjG6/3Dp8O+4MZcKwQE0CH7rUVnGKQCWOcoydwG0mNdAiAC8ifhnj7kEYb4TpA7mnR0BKHb+eN7OD8Ah6Lsv0gOuw0fbJ9qc6eY1cC3nQPgxopnTwrgiONvwJeQFqL0L0ldBK+jJDf0xycqF8QKMoaWrmhWQLwAAAABJRU5ErkJggg==",
-  grump: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABEElEQVR42u2XzQ3CMAyFO0RPCMQC7MCdGZiAA4MglmETluFclEquolfjvDhu4YClJ1Vt4/fFzV+77h+/HpvtYUhaq90syeX4HFWTzNvOTMQm87ShEmEyKXEupp3rO6JB0uM+zKRBNY8DBNKMNZBFZgJjjpUI7XUJRJ7fzq9JzbOA7XVuinJBoDmGZozRBFEC0HoaBqCVXqLv96M0AHn2CZKG+DkAa4CxqloRBSDKuHpJxrncahwGwIDhZpQq6QbIP0O6d9pdpwFmXWs7YvWuiBACwChkS9bKzQI0ld+CyE2k3HidA4Qdy6yRXVLYlvw1czyascahBxJP78OqYM1p1OoAnvcW/UEJ+ykpDcSI9yTeDba6oMc8EVoAAAAASUVORK5CYII=",
+  dragonW1: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABKklEQVR42tWXTQrCQAxGe4SKGxfiCUToJVx4pJ7KW0gv4E7wDC7cVrJICXG+NBOnDg18CIXOe53E/jTNWmqzPYxV4e/hNFaTqCrAcM5fJTRcSqAUhSOB/n6BKSIiey5jgVMixYYuB851vgbnJTV0ufCwRKTnCN62u3yJiAABKBoeEpDTP7f1DPYIuCX09HvASELCWcCUQMN37PdTLLiWkMdoPfqlXYESKQEGe67eE1orKYCGj0/y7IAuWlOCGW5K6OgFPGAtIQPhqCXeflv17LopWQIeCW8RPPSQsgRyKvxMsCQWg8sBRBI8lIvA0a1T3he0wO3x+kpRuN4dKZECh3vufXAs8k4oryy10BysiAw6MdV/KYr+KcXeklcpYLXzp++EnBmo+kHrrQ/fD6wnrDSctAAAAABJRU5ErkJggg==",
+  dragonW2: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABJUlEQVR42u2XQQrCQAxFe4SKGxfiCUToJVx4pJ7KW4gXcCd4BhduK1mkhJhkMiFjEQwEQXDe6+TbTrvuX85arXfTovDX9TAtJrGoAMKxvyrB4VRC61S4JjDeTmqniNCZ07bAkkha6GrgWMdzMC9S6GrhYYnIzDV432/qJSICAIDm8JAATX9p6xHsEXBL8PR7wJoEhaOAKaGFbz9u57bgXIJ+B+vBJ+yKKiEJINhz9Z6GtUQBLXz4I88O8II1KRjhpgRvvoAHzCVoq3BtJN55W/UYhrmrBDwS3gJ46CFlCdRU+JlgSTSD0wBqEhjKJnDt1knvC1zgcn9+dCqc7w6VkMDhmXsfHE3OhPTKSjvQ7FBqLSJlQPp3NDu2/4RAaYRp7wqZOXgDnRyc3Px1LuQAAAAASUVORK5CYII=",
+  grumpW1: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABIUlEQVR42u2WPQ7CMAyFc4QiFiauwWV6InbOAhdjDvJgyTJ+zksbaIdG8gD18/uaOj+lHGOv43S+1s3qSfJ9fldGxOaw9boE8ny+vag8GkCTNZDImmcQbL0vgRRFAm+aQTD1QloRIJH8RoHMtVYK4afLC9Tk+agwLEirHmWugpaxhtdkNbsBMhCUSwNk39ZPr/0PgSKgqFfSphQTP7yxDT+6NqDI3ANM0wWaS8hzD7AIIgKQ4gyAhVgNYKf1bwCtDu4N3SXps0AFI4w1qINLk/zWmS0nFLaOj3Qr9slomWVLMDPvAog+QwSg+QggqktfMrJeaL0pe2Sn16wIgDGO3nbxPZNprMh49MW2sB3+M+MlMcScWUps3gEwrAfW5O1qfAC2yaTrHAk42gAAAABJRU5ErkJggg==",
+  grumpW2: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABI0lEQVR42u2WOw7CQAxEc4QgGiquwWVyInrOAhejDnJhyTKe2dlkBU0suUjW9rxsvJ9pOuwwYKfzdf1bPQu+L+9VSVJj1HpdCTa+3F5SnAzgwe4oKYozCLXeV4IVRQlZlEEo9UpaS0BJ9owciXstCpGnKye4yPOxQo8grXqSuCe0hN1zDqvZDcBAUKwMwP5tnt74DoEioKpXaFOaSLYsHD1b1wZUiWeAeb5AcXMbzwCbICoAK64ARIjdAHFafwbQ6uBe911SPgs8YYSwu3RweVDeOtlyQh7rZKdbcQ5Gy4wtQSbeBVD9hgrA4xFAVVe+ZLBeaH2pemTTa1YFoAhXX7v5nqk0ViU8+mI7qR0+XLh1C9p14qniSoPJy+0AGNUDPePIPu+4omkMW5ubAAAAAElFTkSuQmCC",
+  rageW1: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABJElEQVR42u2WzQ3CMAyFM0IRF06cuLIFG7AVSzAFczFCkZEsWcbPeUkD9NBIPkD9/L6mzk8p21jr2O2P89/qSfLzepkZEZvD1msSyPPH+UTl0QCarIFE1jyDYOt9CKQoEnjTDIKpF9KKAInkNwpkrrVSCD9dXqAm8/0Gw4LU6lHmKqgZa3hNVrMZIANBuTRA9m399Nr/ECgCinolbcq3kR/O2IYfTRtQaO4ApukAzSXkuQfogogApDgDYCEWA9hp/RlArYNbQ3dJ+ixQwQhjDerg0iS/dWbLCYWt4yPdin0yWmbZEszMmwCizxABaD4CiOrSl4ysF2pvyh7Z6TUrAmCMo7ftvmcyjRUZj77YFrbDv2bcE0PMmaXE5m0Aw3pgSd6qxguvCEp50aXKXgAAAABJRU5ErkJggg==",
+  rageW2: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABJ0lEQVR42u2Wyw3CQAxEU0IQF06cuNIFHdAVTVAFdVFCkJEsWcYzOxtWcIklH5K1PS8b72eaNtsM2G5/XP5Wz4Kf18uiJKkxar2uBBt/nE9SnAzgwe4oKYozCLXeR4IVRQlZlEEo9UpaS0BJ9owciXstCpGnKye4yHK/QY8grXqSuCe0hN1zDqvZDcBAUKwMwP5tnt74DoEioKpXaFO+hbIl4ejZujagUjwBzPMBipvbeAZYBVEBWHEFIEJ8DRCn9WcArQ7udd8l5bPAE0YIu0sHlwflrZMtJ+SxTna6FedgtMzYEmTiXQDVb6gAPB4BVHXlSwbrhdaXqkc2vWZVAIpw9bWr75lKY1XCoy+2k9rhw4Vbt6CvTjxVXGkwebltAKN6oGcc2Qt+G0f36Ob7BQAAAABJRU5ErkJggg==",
   circle: "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAElJREFUOI1jYKAQMOKS+P///38UhYyMONViaETXjE8cr60kqSFGMza1TMRqItpEUvVQ7IKBNwAOBjYWSHEFUamRlKRM/cxEKgAAUqZPxel/OhQAAAAASUVORK5CYII=",
   heart: "iVBORw0KGgoAAAANSUhEUgAAACcAAAAiCAYAAADcbsCGAAAAAXNSR0IArs4c6QAAASpJREFUWIXVmMEVgjAMhtM+B3AD796cyFF4jsJE3LizARvoSV/FJE3SBOp/g1d+PtKQNk2wgy7n61MyblnnVF4namDNcGvUAkX5oi/QmGKQFijM08W4BGwFKz2/4FqMl3VO3PPTMJLP3h53Ho4y3ppiRpw4KM63Cqf9WisY5ZetxpoXS4T5ZQB7rnGAHvCnVuNpGD9T4h1NFE4rb6i3yJzrQdmraEao78htb0Tlj0X/Fbme9AOnXTsj1XfkJDvaPaRa+I/Wss4Jhesl7zKArFmJFBUMclr3ih61RQc4OOdqAag2OFHLGQVWplg1chHTKwEDUPStHhHkPhT7KdUdvxZSEnmqWpjPSlrbxhoYAAP3VtROWVJbRcXXE1BT8MUDvU6ONDItW9bDQK1eux+SirvKsYAAAAAASUVORK5CYII=",
   sun: "iVBORw0KGgoAAAANSUhEUgAAADoAAAA2CAYAAACWeYpTAAAAAXNSR0IArs4c6QAAAcVJREFUaIHtmkGOwyAMRWmUA+QG0ai7XKvnmmt1Nxr1Br1BZhUJUSDY/ti407+q1MTwsAHjEIKS1mXb12XbtdpLddFoJAV8PO8q7caatBu00gf03fQBfTdlV794lUStkIdNixU3hAxobq+z6tyZKIPnMnTT5KMlEXkBzY2OZUaTituXeZSO9J4eReOUBamHx2ttclJK8Sj2DmuUp9lGNOctApZl4Azy5/fWbOv69d30nBQWCkoBrKkEL4Elv5iDRAHGysGqgWpBHkLCusyMOBKB9vRmyT53tW8GtUoDUbBsj/b2Jlou5ihiUF2A5kQNXzegUq/OIYxRYEapVCGZcn+MdNCmqNTvddl2N6Er1ZQLU6+hW+r343m/zLUHPKrE8n9Cl/ti64EZJWl7zaCW4Y0YVFHoangVVW0YtsIQArakAqsZIWFrkWJeYUCFcQ/IEDrVdTnePRsok3LnIUR9tzfgoaE/SSC3NJghJHCPPRtqEAHbKzE5Ncq5z0AF1si6yN89rU863EsfxX10xCoD9d5CLFLCYO3NVBRY1dOL5VXWImgMhoLM/aZI0o/qrZTRQlUid6UUbqTB7xlpiBNp7jzqQpar7h/B/O9R1trkygAAAABJRU5ErkJggg==",
@@ -279,6 +283,25 @@ const EMBED = {
 };
 
 const ASSETS = { player: null, enemy: null, enemyEnraged: null, bubble: null, heart: null, sun: null, grass: null, brick: null };
+// 內建行走動畫幀（自繪 32x32；使用者上傳單張素材時退回單張+程式紅染）
+const FRAMES = { player: [], enemy: [], enemyEnraged: [] };
+const FRAME_KEYS = { player: ['dragonW1', 'dragonW2'], enemy: ['grumpW1', 'grumpW2'], enemyEnraged: ['rageW1', 'rageW2'] };
+for (const [slot, keys] of Object.entries(FRAME_KEYS)) {
+  keys.forEach((k, i) => {
+    if (!EMBED[k]) return;
+    const img = new Image();
+    img.onload = () => { FRAMES[slot][i] = img; };
+    img.src = 'data:image/png;base64,' + EMBED[k];
+  });
+}
+// 行走幀選擇：8fps 交替；moving=false 固定第 1 幀、空中用第 1 幀（腿分開）
+function walkFrame(slot, moving, airborne) {
+  const fs = FRAMES[slot];
+  if (!fs.length || !fs[0]) return null;
+  if (airborne) return fs[0];
+  if (!moving) return fs[1] || fs[0];
+  return fs[Math.floor(S.time * 8) % fs.length] || fs[0];
+}
 const USER_SET = new Set(); // 使用者自行上傳過的槽位
 let enragedAuto = null;     // 由 enemy 自動紅染的暴走變體
 let bubbleTiers = null;     // 依 Tier 著色的泡泡快取
@@ -1135,11 +1158,16 @@ function drawEnemy(e) {
   const size = e.r * 2.4;
   const opts = { flip: e.dir < 0, sx: e.sx, sy: e.sy };
   let drawn = false;
+  const moving = Math.abs(e.vx) > 10, air = !e.onGround;
   if (enraged) {
     if (USER_SET.has('enemyEnraged') && ASSETS.enemyEnraged) drawn = drawSprite('enemyEnraged', e.x, e.y, size, opts);
+    else if (!USER_SET.has('enemy') && walkFrame('enemyEnraged', moving, air)) drawn = drawSprite(walkFrame('enemyEnraged', moving, air), e.x, e.y, size, opts);
     else if (enragedAuto) drawn = drawSprite(enragedAuto, e.x, e.y, size, opts);
   }
-  if (!drawn) drawn = drawSprite('enemy', e.x, e.y, size, opts);
+  if (!drawn) {
+    const eImg = USER_SET.has('enemy') ? 'enemy' : (walkFrame('enemy', moving, air) || 'enemy');
+    drawn = drawSprite(eImg, e.x, e.y, size, opts);
+  }
   if (!drawn) {
     const w = e.r * 2 * e.sx, h = e.r * 2 * e.sy;
     ctx.beginPath();
@@ -1378,7 +1406,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // 載入內嵌預設素材（KAPLAY crew, MIT）
-const EMBED_SLOTS = { player: 'dragon', enemy: 'grump', bubble: 'circle', heart: 'heart', sun: 'sun', grass: 'grass', brick: 'brick' };
+const EMBED_SLOTS = { player: 'dragonW1', enemy: 'grumpW1', bubble: 'circle', heart: 'heart', sun: 'sun', grass: 'grass', brick: 'brick' };
 for (const [slot, key] of Object.entries(EMBED_SLOTS)) {
   if (EMBED[key]) loadAsset(slot, 'data:image/png;base64,' + EMBED[key], false);
 }
