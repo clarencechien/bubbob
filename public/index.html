@@ -137,6 +137,7 @@
       <div><b class="t">⚡ 集氣</b>點按＝普通泡泡；<b>按住約 0.8 秒放開＝強力泡</b>：困住的敵人一段時間內保證掙脫不了（白色虛線環）。</div>
       <div><b class="t">⏳ 熟成賭注</b>被困的泡泡會隨時間變色升值——但越熟越容易掙脫，掙脫的敵人會<b>暴走</b>還會震鬆鄰居泡泡。</div>
       <div><b class="t">❤️ 生存</b>被敵人碰到扣 1 血（短暫無敵）。血歸零＝結束。過關補滿血。</div>
+      <div style="grid-column: 1 / -1"><b class="t">⏱ 子彈時間</b><b>按住 L</b> 進入慢動作：場景翻成斜角、WASD 自由漂移、空白上衝。<b>連鎖回充能量</b>（單發不回充，上限 5s）。注意：泡泡熟成與掙脫<b>不會變慢</b>——慢下來不等於安全。簡單難度開局送 3 秒且主角不被慢放。</div>
     </div>
     <div class="tiers">
       <div class="tier"><span class="dot" style="background:#4ade80"></span><br><b>綠 ×1</b><br>分數</div>
@@ -146,7 +147,7 @@
     </div>
     <div class="tiers-note">引爆時依每顆泡泡的顏色領獎勵；紅泡無敵星＝碰到敵人自動變泡泡</div>
     <div class="keys">
-      <kbd>←→</kbd>/<kbd>A D</kbd> 移動　<kbd>空白</kbd>/<kbd>W</kbd> 跳　<kbd>J</kbd>/<kbd>滑鼠</kbd> 吐泡（按住集氣）　<kbd>P</kbd> 暫停　<kbd>R</kbd> 重開　<kbd>M</kbd> 回此頁
+      <kbd>←→</kbd>/<kbd>A D</kbd> 移動　<kbd>空白</kbd>/<kbd>W</kbd> 跳　<kbd>J</kbd>/<kbd>滑鼠</kbd> 吐泡（按住集氣）　<kbd>L</kbd> 按住＝子彈時間　<kbd>P</kbd> 暫停　<kbd>R</kbd> 重開　<kbd>M</kbd> 回此頁
     </div>
     <div class="diffs">
       <button id="start-easy">簡單<small>7♥ · 強力泡永久鎖 · 綠泡也補血</small></button>
@@ -224,6 +225,34 @@
     <div class="desc">場上總敵數上限（含被困）。拉到最左 -1 = 不停生。</div>
   </div>
 
+  <div class="section-title">子彈時間（§14）</div>
+  <div class="knob">
+    <label>bulletScale 世界慢放<span class="val" id="v-bulletScale">0.30</span></label>
+    <input type="range" id="k-bulletScale" min="0.1" max="0.8" step="0.05" value="0.3">
+  </div>
+  <div class="knob">
+    <label>btPlayerScale 主角慢放<span class="val" id="v-btPlayerScale">0.30</span></label>
+    <input type="range" id="k-btPlayerScale" min="0.1" max="1" step="0.05" value="0.3">
+    <div class="desc">1.0 = 主角不被慢放（簡單難度）。</div>
+  </div>
+  <div class="knob">
+    <label>riskClock 風險鐘<span class="val" id="v-riskClock">1.00</span></label>
+    <input type="range" id="k-riskClock" min="0.5" max="1.5" step="0.05" value="1">
+    <div class="desc">BT 中熟成+掙脫的速度。鐵律一：絕不為 0。</div>
+  </div>
+  <div class="knob">
+    <label>energyMax 能量上限<span class="val" id="v-energyMax">5</span></label>
+    <input type="range" id="k-energyMax" min="2" max="10" step="1" value="5">
+  </div>
+  <div class="knob">
+    <label>chainEnergy 連鎖回充<span class="val" id="v-chainEnergy">1.00</span></label>
+    <input type="range" id="k-chainEnergy" min="0" max="2" step="0.1" value="1">
+  </div>
+  <div class="knob">
+    <label>btGift 保底能量<span class="val" id="v-btGift">0</span></label>
+    <input type="range" id="k-btGift" min="0" max="5" step="1" value="0">
+  </div>
+
   <div class="section-title">引爆獎勵（依 Tier）</div>
   <div class="legend">
     <b style="background:#4ade80"></b>綠 醞釀：分數（greenHeal &gt; 0 時也補血）<br>
@@ -281,9 +310,11 @@ const KNOBS = {
   cascadeStrength: 1.0, spawnInterval: 2.0, enemySpeed: 1.0,
   maxHp: 5, healAmount: 1, dualDur: 10, starDur: 10,
   powerLock: 6, greenHeal: 0, maxEnemies: 12,
+  bulletScale: 0.3, btPlayerScale: 0.3, riskClock: 1.0,
+  energyMax: 5, chainEnergy: 1.0, btGift: 0,
 };
 const S = {}; // 遊戲狀態容器（reset() 填內容；先宣告給滑桿回呼引用）
-const INT_KNOBS = new Set(['maxHp', 'healAmount', 'dualDur', 'starDur', 'powerLock', 'greenHeal', 'maxEnemies']);
+const INT_KNOBS = new Set(['maxHp', 'healAmount', 'dualDur', 'starDur', 'powerLock', 'greenHeal', 'maxEnemies', 'energyMax', 'btGift']);
 const POWERLOCK_INF = 20; // powerLock 滑桿最大值 = ∞ 永不掙脫
 function fmtKnob(key, v) {
   if (key === 'powerLock' && v >= POWERLOCK_INF) return '∞ 永不';
@@ -310,9 +341,9 @@ function setKnob(key, v) {
 
 // 難易度一鍵預設（SPEC §7）：改寫所有旋鈕並補滿血
 const PRESETS = {
-  easy:   { escapeRate: 0.5, ripenSpeed: 0.8, chainStrength: 1.3, cascadeStrength: 0.5, spawnInterval: 3.0, enemySpeed: 0.85, maxHp: 7, healAmount: 2, dualDur: 14, starDur: 14, powerLock: 20, greenHeal: 1, maxEnemies: 8 },
-  normal: { escapeRate: 1.0, ripenSpeed: 1.0, chainStrength: 1.0, cascadeStrength: 1.0, spawnInterval: 2.0, enemySpeed: 1.0, maxHp: 5, healAmount: 1, dualDur: 10, starDur: 10, powerLock: 6, greenHeal: 0, maxEnemies: 12 },
-  hard:   { escapeRate: 1.6, ripenSpeed: 1.4, chainStrength: 0.9, cascadeStrength: 1.6, spawnInterval: 1.0, enemySpeed: 1.15, maxHp: 3, healAmount: 1, dualDur: 6, starDur: 6, powerLock: 3, greenHeal: 0, maxEnemies: -1 },
+  easy:   { escapeRate: 0.5, ripenSpeed: 0.8, chainStrength: 1.3, cascadeStrength: 0.5, spawnInterval: 3.0, enemySpeed: 0.85, maxHp: 7, healAmount: 2, dualDur: 14, starDur: 14, powerLock: 20, greenHeal: 1, maxEnemies: 8, bulletScale: 0.3, btPlayerScale: 1.0, riskClock: 0.7, energyMax: 5, chainEnergy: 1.2, btGift: 3 },
+  normal: { escapeRate: 1.0, ripenSpeed: 1.0, chainStrength: 1.0, cascadeStrength: 1.0, spawnInterval: 2.0, enemySpeed: 1.0, maxHp: 5, healAmount: 1, dualDur: 10, starDur: 10, powerLock: 6, greenHeal: 0, maxEnemies: 12, bulletScale: 0.3, btPlayerScale: 0.3, riskClock: 1.0, energyMax: 5, chainEnergy: 1.0, btGift: 0 },
+  hard:   { escapeRate: 1.6, ripenSpeed: 1.4, chainStrength: 0.9, cascadeStrength: 1.6, spawnInterval: 1.0, enemySpeed: 1.15, maxHp: 3, healAmount: 1, dualDur: 6, starDur: 6, powerLock: 3, greenHeal: 0, maxEnemies: -1, bulletScale: 0.3, btPlayerScale: 0.3, riskClock: 1.0, energyMax: 4, chainEnergy: 0.8, btGift: 0 },
 };
 const DIFF_LABEL = { easy: '簡單', normal: '中等', hard: '最難' };
 for (const name of Object.keys(PRESETS)) {
@@ -549,6 +580,7 @@ function reset() {
   S.spawnT = 0.5;
   S.escapeClock = 0;
   S.shake = 0; S.shakeT = 0;
+  S.bt = false; S.btEnergy = KNOBS.btGift; S.btVis = 0; // 子彈時間（§14）
   S.hitstop = 0;
   S.redFlash = 0;
   S.chainFlash = null;
@@ -608,8 +640,8 @@ const inputJump  = () => keys['arrowup'] || keys[' '] || keys['w'];
 // ---------------------------------------------------------------------
 // 物理：牆 / 地板 / 單向平台
 // ---------------------------------------------------------------------
-function moveActor(a, dt) {
-  a.vy += GRAVITY * dt;
+function moveActor(a, dt, fly = false) {
+  if (!fly) a.vy += GRAVITY * dt; // BT 自由移動：重力暫停
   const prevY = a.y;
   a.x += a.vx * dt;
   a.y += a.vy * dt;
@@ -622,7 +654,7 @@ function moveActor(a, dt) {
     if (a.vy > 260) a.landPop = Math.min(1, a.vy / 900);
     a.y = FLOOR_Y - a.r; a.vy = 0; a.onGround = true;
   }
-  if (a.vy >= 0) {
+  if (a.vy >= 0 && !fly) { // BT 中穿過單向平台
     for (const p of PLATFORMS) {
       if (a.x > p.x - 4 && a.x < p.x + p.w + 4 &&
           prevY + a.r <= p.y + 6 && a.y + a.r >= p.y) {
@@ -669,27 +701,36 @@ function tryShoot(power = false) {
   if (power) burst(p.x + p.facing * (p.r + 8), p.y - 4, '#7dd3fc', 8);
 }
 
-function updatePlayer(dt) {
+function updatePlayer(dt, wDt) {
   const p = S.player;
   if (p.dead) return;
   p.invuln = Math.max(0, p.invuln - dt);
   p.shootCd = Math.max(0, p.shootCd - dt);
-  p.dualT = Math.max(0, p.dualT - dt);
-  p.starT = Math.max(0, p.starT - dt);
+  p.dualT = Math.max(0, p.dualT - wDt); // 星星/雙泡走世界鐘（BT 內等比延長）
+  p.starT = Math.max(0, p.starT - wDt);
 
   let ax = 0;
   if (inputLeft())  { ax -= 1; p.facing = -1; }
   if (inputRight()) { ax += 1; p.facing = 1; }
   p.vx = ax * P_SPEED;
 
-  p.coyote = p.onGround ? 0.09 : Math.max(0, p.coyote - dt);
-  if (inputJump() && p.coyote > 0) {
-    p.vy = -P_JUMP; p.coyote = 0;
-    p.sx = 0.78; p.sy = 1.3;
+  if (S.bt) {
+    // BT 自由移動（§14.3）：WS 上下漂移、空白向上衝刺，重力暫停
+    let ay = 0;
+    if (keys['w'] || keys['arrowup']) ay -= 1;
+    if (keys['s'] || keys['arrowdown']) ay += 1;
+    if (keys[' ']) ay -= 1.6;
+    p.vy = ay * P_SPEED * 0.85;
+  } else {
+    p.coyote = p.onGround ? 0.09 : Math.max(0, p.coyote - dt);
+    if (inputJump() && p.coyote > 0) {
+      p.vy = -P_JUMP; p.coyote = 0;
+      p.sx = 0.78; p.sy = 1.3;
+    }
   }
   if (p.charging) p.chargeT = Math.min(2, p.chargeT + dt);
 
-  moveActor(p, dt);
+  moveActor(p, dt, S.bt);
   if (p.landPop) { p.sx = 1 + p.landPop * 0.45; p.sy = 1 - p.landPop * 0.35; p.landPop = 0; }
   p.sx += (1 - p.sx) * Math.min(1, dt * 14);
   p.sy += (1 - p.sy) * Math.min(1, dt * 14);
@@ -849,14 +890,15 @@ function updateShots(dt) {
 // ---------------------------------------------------------------------
 // 敵泡泡：上浮、晃動、軟排斥
 // ---------------------------------------------------------------------
-function updateBubbles(dt) {
+function updateBubbles(dt, rDt) {
+  // dt = 世界鐘（漂浮/晃動）；rDt = 風險鐘（熟成/鎖定）——鐵律一：BT 中風險照跑
   for (const b of S.bubbles) {
-    b.age += dt * KNOBS.ripenSpeed;
+    b.age += rDt * KNOBS.ripenSpeed;
     b.phase += dt * (2 + tierOf(b.age) * 2.2);
     b.pop0 = Math.max(0, b.pop0 - dt);
     if (b.graceT) b.graceT = Math.max(0, b.graceT - dt);
     if (b.lockT && b.lockT !== Infinity) {
-      b.lockT = Math.max(0, b.lockT - dt);
+      b.lockT = Math.max(0, b.lockT - rDt);
       if (b.lockT === 0) { b.unlockFlash = 0.5; b.jolt = 0.3; } // 解鎖提示：危險回歸
     }
     if (b.unlockFlash) b.unlockFlash = Math.max(0, b.unlockFlash - dt);
@@ -1000,6 +1042,14 @@ function detonate(startIdx) {
 
   popped.sort((a, b) => b - a).forEach(i => S.bubbles.splice(i, 1));
 
+  // 連鎖回充子彈時間能量（§14.2）：N=1 不回充，越長回充越多
+  const ETABLE = [0, 0, 0.5, 1.0, 1.6, 2.3, 3.0];
+  const grant = ETABLE[Math.min(n, 6)] * KNOBS.chainEnergy;
+  if (grant > 0) {
+    S.btEnergy = Math.min(KNOBS.energyMax, S.btEnergy + grant);
+    S.popups.push({ x: cx, y: cy - 114, text: '⏱ +' + grant.toFixed(1) + 's', color: '#6db3ff', t: 1.1, big: false });
+  }
+
   S.chainFlash = { n, score: total, t: 1.1 };
   if (n >= 2) {
     S.hitstop = Math.min(0.06 + n * 0.035, 0.3);
@@ -1019,13 +1069,13 @@ function burst(x, y, color, count) {
     S.particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, r: 2 + Math.random() * 3.5, color, t: 0.4 + Math.random() * 0.4 });
   }
 }
-function updateFx(dt) {
+function updateFx(dt, wDt = dt) {
   for (let i = S.particles.length - 1; i >= 0; i--) {
     const p = S.particles[i];
-    p.t -= dt;
+    p.t -= wDt; // 粒子吃世界鐘：BT 中碎屑懸浮，慢動作體感的主力
     if (p.t <= 0) { S.particles.splice(i, 1); continue; }
-    p.vy += 500 * dt;
-    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.vy += 500 * wDt;
+    p.x += p.vx * wDt; p.y += p.vy * wDt;
   }
   for (let i = S.popups.length - 1; i >= 0; i--) {
     const p = S.popups[i];
@@ -1047,6 +1097,20 @@ const STEP = 1 / 60;
 function update(dt) {
   S.time += dt;
 
+  // 子彈時間（§14）：按住 L 進入；能量以真實秒消耗；放開或歸零退出
+  const btWant = keys['l'];
+  if (!S.bt && btWant && S.btEnergy > 0.5 && !S.player.dead) S.bt = true;
+  if (S.bt) {
+    S.btEnergy -= dt;
+    if (!btWant || S.btEnergy <= 0 || S.player.dead) { S.btEnergy = Math.max(0, S.btEnergy); S.bt = false; }
+  }
+  S.btVis += ((S.bt ? 1 : 0) - S.btVis) * Math.min(1, dt * (S.bt ? 6 : 9)); // 傾斜漸進/回正
+
+  // 三條時鐘（§14.1）：世界 / 玩家 / 風險（鐵律一：風險鐘絕不停）
+  const wDt = S.bt ? dt * KNOBS.bulletScale : dt;
+  const pDt = S.bt ? dt * KNOBS.btPlayerScale : dt;
+  const rDt = S.bt ? dt * Math.max(0.5, KNOBS.riskClock) : dt;
+
   // 關卡流程（v0.4）：配額固定，殺滿即過關；過關短暫慶祝後進下一關
   const LV = curLevel();
   if (S.levelClearT > 0) {
@@ -1055,10 +1119,11 @@ function update(dt) {
       S.level++; S.levelKills = 0; S.levelSpawned = 0;
       S.spawnT = 1.0;
       S.player.hp = KNOBS.maxHp; // 過關補滿血
+      S.btEnergy = Math.max(S.btEnergy, KNOBS.btGift); // 簡單難度每關保底能量
       S.popups.push({ x: W / 2, y: 240, text: 'LEVEL ' + S.level, color: '#ffb020', t: 1.6, big: true });
     }
   } else if (!S.victory) {
-    S.spawnT -= dt;
+    S.spawnT -= wDt;
     if (S.spawnT <= 0 && S.levelSpawned < LV.quota) {
       if (spawnEnemy()) {
         S.levelSpawned++;
@@ -1073,13 +1138,13 @@ function update(dt) {
     }
   }
 
-  updateSpawnWarns(dt);
-  updatePlayer(dt);
-  updateEnemies(dt);
-  updateShots(dt);
-  updateBubbles(dt);
-  updateEscapes(dt);
-  updateFx(dt);
+  updateSpawnWarns(wDt);
+  updatePlayer(pDt, wDt);
+  updateEnemies(wDt);
+  updateShots(wDt);
+  updateBubbles(wDt, rDt);
+  updateEscapes(rDt);
+  updateFx(dt, wDt);
 
   document.getElementById('h-score').textContent = S.score;
   document.getElementById('h-maxChain').textContent = S.maxChain;
@@ -1095,6 +1160,13 @@ function draw() {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, W, H);
   ctx.save();
+  const v = S.btVis;
+  if (v > 0.01) {
+    // BT 傾斜（§14.4）：剪切+壓扁+微放大 → 讀起來像場景翻成 3D，操作軸與碰撞不變
+    ctx.translate(W / 2, H / 2);
+    ctx.transform(1 + 0.05 * v, -0.09 * v, 0.30 * v, 1 - 0.14 * v, 0, 0);
+    ctx.translate(-W / 2, -H / 2 + 14 * v);
+  }
   if (S.shake > 0) ctx.translate((Math.random() - 0.5) * S.shake * 2, (Math.random() - 0.5) * S.shake * 2);
 
   drawArena();
@@ -1114,6 +1186,10 @@ function draw() {
 
   ctx.restore();
 
+  if (S.btVis > 0.01) {
+    ctx.fillStyle = `rgba(96,150,255,${S.btVis * 0.10})`;
+    ctx.fillRect(0, 0, W, H);
+  }
   if (S.redFlash > 0) {
     ctx.fillStyle = `rgba(255,40,60,${S.redFlash * 0.4})`;
     ctx.fillRect(0, 0, W, H);
@@ -1135,6 +1211,13 @@ function drawArena() {
   ctx.fillStyle = 'rgba(255,255,255,0.08)';
   ctx.fillRect(0, FLOOR_Y, W, 2);
 
+  // BT 中的厚度側邊：把平面翻成「有厚度的板」
+  if (S.btVis > 0.02) {
+    const v = S.btVis;
+    ctx.fillStyle = `rgba(12,16,30,${0.85 * v})`;
+    for (const p of PLATFORMS) ctx.fillRect(p.x + 5 * v, p.y + 14, p.w, 7 * v);
+    ctx.fillRect(5 * v, FLOOR_Y + 4, W, 8 * v);
+  }
   // 單向平台：草地磚（fallback 素色）
   for (const p of PLATFORMS) {
     if (patterns.grass) {
@@ -1381,6 +1464,19 @@ function drawHudOverlay() {
   }
   ctx.globalAlpha = 1;
 
+  // 子彈時間能量條（§14.2）
+  {
+    const bx = 30, by = 74, bw = 120, bh = 8;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+    ctx.fillStyle = S.bt ? '#9ecbff' : '#5b8fd6';
+    ctx.fillRect(bx, by, bw * Math.min(1, S.btEnergy / KNOBS.energyMax), bh);
+    if (S.bt) { ctx.strokeStyle = '#cfe6ff'; ctx.lineWidth = 1; ctx.strokeRect(bx - 1.5, by - 1.5, bw + 3, bh + 3); }
+    ctx.font = '11px "Courier New", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = S.btEnergy > 0.5 ? '#9ecbff' : '#4a5a7a';
+    ctx.fillText('L 子彈時間 ' + S.btEnergy.toFixed(1) + 's', bx + bw + 8, by + 8);
+  }
 
   // 關卡資訊（v0.4）：置頂中央
   {
