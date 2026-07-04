@@ -137,7 +137,7 @@
       <div><b class="t">⚡ 集氣</b>點按＝普通泡泡；<b>按住約 0.8 秒放開＝強力泡</b>：困住的敵人一段時間內保證掙脫不了（白色虛線環）。</div>
       <div><b class="t">⏳ 熟成賭注</b>被困的泡泡會隨時間變色升值——但越熟越容易掙脫，掙脫的敵人會<b>暴走</b>還會震鬆鄰居泡泡。</div>
       <div><b class="t">❤️ 生存</b>被敵人碰到扣 1 血（短暫無敵）。血歸零＝結束。過關補滿血。</div>
-      <div style="grid-column: 1 / -1"><b class="t">⏱ 子彈時間</b><b>按住 L</b> 進入慢動作：場景翻成斜角、WASD 自由漂移、空白上衝。<b>連鎖回充能量</b>（單發不回充，上限 5s）。注意：泡泡熟成與掙脫<b>不會變慢</b>——慢下來不等於安全。簡單難度開局送 3 秒且主角不被慢放。</div>
+      <div style="grid-column: 1 / -1"><b class="t">⏱ 子彈時間</b><b>按住 L</b> 進入慢動作：場景長出深度（平台一格變三格）、<b>W/S 前後移動紙片</b>閃開敵人、空白照常跳。離開平面就碰不到敵人——但也引爆不了，且更耗能量。<b>連鎖回充能量</b>（單發不回充，上限 5s）。注意：泡泡熟成與掙脫<b>不會變慢</b>——慢下來不等於安全。簡單難度開局送 3 秒且主角不被慢放。</div>
     </div>
     <div class="tiers">
       <div class="tier"><span class="dot" style="background:#4ade80"></span><br><b>綠 ×1</b><br>分數</div>
@@ -564,6 +564,7 @@ function reset() {
     hp: KNOBS.maxHp, dead: false,
     dualT: 0, starT: 0, // 橙泡雙泡 / 紅泡無敵星 倒數
     charging: false, chargeT: 0, // 集氣（v0.3）
+    z: 0, // 深度軸（v0.6.1）：BT 中 W/S 前後，0 = 玩法平面
     sx: 1, sy: 1,
   };
   S.enemies = [];
@@ -694,7 +695,7 @@ function tryShoot(power = false) {
   if (p.dead || p.shootCd > 0 || S.paused) return;
   p.shootCd = power ? 0.45 : 0.32;
   const r = power ? 19 : 15, spd = power ? 540 : 460, life = power ? 1.3 : 1.15;
-  const mk = (oy, ovx) => S.shots.push({ x: p.x + p.facing * (p.r + 6), y: p.y - 4 + oy, vx: p.facing * (spd + ovx), r, life, power });
+  const mk = (oy, ovx) => S.shots.push({ x: p.x + p.facing * (p.r + 6), y: p.y - 4 + oy, vx: p.facing * (spd + ovx), r, life, power, z: p.z });
   if (p.dualT > 0) { mk(-11, 40); mk(7, -30); } // 雙泡能力（§5.5 橙）
   else mk(0, 0);
   p.sx = power ? 1.35 : 1.22; p.sy = power ? 0.75 : 0.85;
@@ -714,23 +715,25 @@ function updatePlayer(dt, wDt) {
   if (inputRight()) { ax += 1; p.facing = 1; }
   p.vx = ax * P_SPEED;
 
+  // 深度軸（§14.3 v0.6.1）：BT 中 W/S 前後推拉紙片，放開被彈簧拉回平面
   if (S.bt) {
-    // BT 自由移動（§14.3）：WS 上下漂移、空白向上衝刺，重力暫停
-    let ay = 0;
-    if (keys['w'] || keys['arrowup']) ay -= 1;
-    if (keys['s'] || keys['arrowdown']) ay += 1;
-    if (keys[' ']) ay -= 1.6;
-    p.vy = ay * P_SPEED * 0.85;
+    let az = 0;
+    if (keys['w'] || keys['arrowup']) az += 1;   // 推進畫面（遠）
+    if (keys['s'] || keys['arrowdown']) az -= 1; // 拉出畫面（近）
+    if (az !== 0) p.z = Math.max(-1, Math.min(1, p.z + az * 2.2 * dt));
+    else p.z += (0 - p.z) * Math.min(1, dt * 1.2);
   } else {
-    p.coyote = p.onGround ? 0.09 : Math.max(0, p.coyote - dt);
-    if (inputJump() && p.coyote > 0) {
-      p.vy = -P_JUMP; p.coyote = 0;
-      p.sx = 0.78; p.sy = 1.3;
-    }
+    p.z += (0 - p.z) * Math.min(1, dt * 10); // 退出 BT：迅速壓回平面
+  }
+  // 跳照常（三軸：x 左右、z 深度、跳）
+  p.coyote = p.onGround ? 0.09 : Math.max(0, p.coyote - dt);
+  if (inputJump() && p.coyote > 0 && !(S.bt && (keys['w'] || keys['arrowup']))) {
+    p.vy = -P_JUMP; p.coyote = 0;
+    p.sx = 0.78; p.sy = 1.3;
   }
   if (p.charging) p.chargeT = Math.min(2, p.chargeT + dt);
 
-  moveActor(p, dt, S.bt);
+  moveActor(p, dt);
   if (p.landPop) { p.sx = 1 + p.landPop * 0.45; p.sy = 1 - p.landPop * 0.35; p.landPop = 0; }
   p.sx += (1 - p.sx) * Math.min(1, dt * 14);
   p.sy += (1 - p.sy) * Math.min(1, dt * 14);
@@ -742,8 +745,10 @@ function updatePlayer(dt, wDt) {
       color: ['#ffd97a', '#7dd3fc', '#f9a8d4'][(Math.random() * 3) | 0], t: 0.35 });
   }
 
-  // 身體碰觸敵泡泡 → 引爆（§5）。剛被星星困住的泡泡有短暫保護
-  for (let i = 0; i < S.bubbles.length; i++) {
+  // 身體碰觸敵泡泡 → 引爆（§5）。剛被星星困住的泡泡有短暫保護。
+  // 離開玩法平面（|z| 大）就碰不到——引爆必須回到平面（鐵律三的第三軸版）
+  const onPlane = Math.abs(p.z) < 0.35;
+  if (onPlane) for (let i = 0; i < S.bubbles.length; i++) {
     const b = S.bubbles[i];
     if ((b.graceT || 0) > 0) continue;
     if (dist(p, b) < p.r + b.r - 4) { detonate(i); break; }
@@ -751,6 +756,7 @@ function updatePlayer(dt, wDt) {
 
   // 碰到自由 / 暴走敵人
   for (let j = S.enemies.length - 1; j >= 0; j--) {
+    if (!onPlane) break; // 紙片在畫外：敵人碰不到你，你也困不到牠
     const e = S.enemies[j];
     if (e.ghostT > 0) continue; // 剛落地虛體：雙向不碰撞
     if (dist(p, e) >= p.r + e.r - 4) continue;
@@ -867,6 +873,7 @@ function updateShots(dt) {
     }
     for (let j = 0; j < S.enemies.length; j++) {
       const e = S.enemies[j];
+      if (Math.abs(s.z || 0) > 0.35) break; // 畫外射的泡泡碰不到平面上的敵人
       if (e.invuln > 0 || e.ghostT > 0) continue; // 暴走短暫無敵 / 落地虛體：困不住
       if (dist(s, e) < s.r + e.r - 2) {
         S.enemies.splice(j, 1);
@@ -1101,7 +1108,8 @@ function update(dt) {
   const btWant = keys['l'];
   if (!S.bt && btWant && S.btEnergy > 0.5 && !S.player.dead) S.bt = true;
   if (S.bt) {
-    S.btEnergy -= dt;
+    // 把自己撐在畫外很貴（防止離面掛機）：|z| 大時耗能 ×1.8
+    S.btEnergy -= dt * (Math.abs(S.player.z) > 0.35 ? 1.8 : 1);
     if (!btWant || S.btEnergy <= 0 || S.player.dead) { S.btEnergy = Math.max(0, S.btEnergy); S.bt = false; }
   }
   S.btVis += ((S.bt ? 1 : 0) - S.btVis) * Math.min(1, dt * (S.bt ? 6 : 9)); // 傾斜漸進/回正
@@ -1164,12 +1172,14 @@ function draw() {
   if (v > 0.01) {
     // BT 傾斜（§14.4）：剪切+壓扁+微放大 → 讀起來像場景翻成 3D，操作軸與碰撞不變
     ctx.translate(W / 2, H / 2);
-    ctx.transform(1 + 0.05 * v, -0.09 * v, 0.30 * v, 1 - 0.14 * v, 0, 0);
-    ctx.translate(-W / 2, -H / 2 + 14 * v);
+    ctx.transform(1 + 0.03 * v, -0.05 * v, 0.16 * v, 1 - 0.08 * v, 0, 0);
+    ctx.translate(-W / 2, -H / 2 + 8 * v);
   }
   if (S.shake > 0) ctx.translate((Math.random() - 0.5) * S.shake * 2, (Math.random() - 0.5) * S.shake * 2);
 
   drawArena();
+  const pBack = S.player.z > 0.1; // 紙片退到深處：畫在泡泡/敵人後面
+  if (pBack) drawPlayer();
   for (const b of S.bubbles) drawBubble(b);
   for (const s of S.shots) drawShot(s);
   for (const w of S.spawnWarns) {
@@ -1181,7 +1191,7 @@ function draw() {
     }
   }
   for (const e of S.enemies) drawEnemy(e);
-  drawPlayer();
+  if (!pBack) drawPlayer();
   drawFx();
 
   ctx.restore();
@@ -1211,12 +1221,41 @@ function drawArena() {
   ctx.fillStyle = 'rgba(255,255,255,0.08)';
   ctx.fillRect(0, FLOOR_Y, W, 2);
 
-  // BT 中的厚度側邊：把平面翻成「有厚度的板」
+  // BT 中平台擠出深度：一格變三格（§14.4 v0.6.1，後排磚 + 前裙邊）
   if (S.btVis > 0.02) {
-    const v = S.btVis;
-    ctx.fillStyle = `rgba(12,16,30,${0.85 * v})`;
-    for (const p of PLATFORMS) ctx.fillRect(p.x + 5 * v, p.y + 14, p.w, 7 * v);
-    ctx.fillRect(5 * v, FLOOR_Y + 4, W, 8 * v);
+    const v = S.btVis, ox = 26 * v, oy = 14 * v;
+    for (const p of PLATFORMS) {
+      // 後排（z=+1）：磚紋 + 壓暗
+      if (patterns.grass) {
+        ctx.save();
+        ctx.translate(p.x + ox, p.y - oy);
+        ctx.fillStyle = patterns.grass;
+        ctx.globalAlpha = 0.9;
+        ctx.fillRect(0, 0, p.w, 14);
+        ctx.fillStyle = `rgba(10,14,26,${0.45 * v})`;
+        ctx.fillRect(0, 0, p.w, 14);
+        ctx.restore();
+      }
+      // 連接側面（上表面斜面）
+      ctx.fillStyle = `rgba(30,42,74,${0.5 * v})`;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + ox, p.y - oy);
+      ctx.lineTo(p.x + p.w + ox, p.y - oy); ctx.lineTo(p.x + p.w, p.y);
+      ctx.closePath(); ctx.fill();
+      // 前裙邊（厚度）
+      ctx.fillStyle = `rgba(12,16,30,${0.85 * v})`;
+      ctx.fillRect(p.x, p.y + 14, p.w, 6 * v);
+    }
+    // 地板長出上表面（往深處延伸的磚面）
+    if (patterns.brick) {
+      ctx.save();
+      ctx.globalAlpha = 0.65 * v;
+      ctx.fillStyle = patterns.brick;
+      ctx.fillRect(0, FLOOR_Y - oy, W, oy);
+      ctx.fillStyle = `rgba(10,14,26,${0.35 * v})`;
+      ctx.fillRect(0, FLOOR_Y - oy, W, oy);
+      ctx.restore();
+    }
   }
   // 單向平台：草地磚（fallback 素色）
   for (const p of PLATFORMS) {
@@ -1295,6 +1334,7 @@ function drawBubble(b) {
 
 function drawShot(s) {
   ctx.save();
+  if (s.z && S.btVis > 0.02) ctx.translate(s.z * 26 * S.btVis, -s.z * 14 * S.btVis);
   if (s.power) { // 強力泡：青色光暈
     ctx.strokeStyle = 'rgba(125,211,252,0.8)';
     ctx.lineWidth = 3;
@@ -1370,7 +1410,14 @@ function drawPlayer() {
   if (p.dead) return;
   const blink = p.invuln > 0 && Math.floor(S.time * 12) % 2 === 0;
   if (blink) return;
+  // 深度投影（v0.6.1）：離面時在玩法平面留幽靈標記（回歸點）
+  const zox = p.z * 26 * S.btVis, zoy = -p.z * 14 * S.btVis;
+  if (Math.abs(p.z) > 0.2 && S.btVis > 0.05) {
+    drawSprite(USER_SET.has('player') ? 'player' : (walkFrame('player', false, false) || 'player'),
+      p.x, p.y, p.r * 2.6, { flip: p.facing < 0, alpha: 0.22 });
+  }
   ctx.save();
+  ctx.translate(zox, zoy);
   if (p.starT > 0) {
     // 無敵星：彩虹色相循環（結束前 2 秒加速）
     const speed = p.starT < 2 ? 900 : 360;
