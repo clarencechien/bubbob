@@ -84,12 +84,77 @@
   }
   #gearBtn:hover { color: var(--accent); border-color: var(--accent); }
   body.panel-open #gearBtn { color: var(--accent); }
+  #launcher {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(7,10,20,0.88);
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+  }
+  #launcher.hidden { display: none; }
+  .lc {
+    width: 620px; max-width: 92%;
+    background: var(--panel); border: 1px solid #2a3554; border-radius: 14px;
+    padding: 26px 30px; text-align: center;
+  }
+  .lc h1 { font-size: 26px; color: var(--accent); letter-spacing: 2px; margin-bottom: 4px; }
+  .lc .tag { font-size: 12px; color: var(--dim); margin-bottom: 18px; }
+  .lc .how {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    text-align: left; font-size: 12px; line-height: 1.7; margin-bottom: 14px;
+  }
+  .lc .how > div { background: var(--panel2); border-radius: 10px; padding: 10px 12px; }
+  .lc .how b.t { display: block; color: var(--accent); margin-bottom: 3px; font-size: 12px; }
+  .lc .tiers { display: flex; gap: 6px; margin: 14px 0 6px; }
+  .lc .tier {
+    flex: 1; border-radius: 10px; padding: 8px 4px; font-size: 11px; line-height: 1.6;
+    background: var(--panel2);
+  }
+  .lc .tier .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-bottom: 2px; }
+  .lc .tiers-note { font-size: 10px; color: var(--dim); margin-bottom: 16px; }
+  .lc .keys { font-size: 11px; color: var(--dim); margin-bottom: 18px; line-height: 1.9; }
+  .lc .diffs { display: flex; gap: 10px; }
+  .lc .diffs button {
+    flex: 1; padding: 14px 0; font-size: 17px; font-weight: bold; letter-spacing: 3px;
+    border: none; border-radius: 12px; cursor: pointer; color: #10131f;
+  }
+  .lc .diffs button small { display: block; font-size: 10px; font-weight: normal; letter-spacing: 0; margin-top: 3px; opacity: .8; }
+  .lc .diffs button:hover { filter: brightness(1.12); }
+  #start-easy   { background: #4ade80; }
+  #start-normal { background: #facc15; }
+  #start-hard   { background: #ef4444; color: #fff !important; }
 </style>
 </head>
 <body>
 
 <button id="gearBtn" title="調整面板（O）">⚙</button>
-<div id="game-wrap"><canvas id="cv" width="900" height="640"></canvas></div>
+<div id="game-wrap"><canvas id="cv" width="900" height="640"></canvas>
+<div id="launcher">
+  <div class="lc">
+    <h1>泡泡龍 · 蓄能引爆</h1>
+    <div class="tag">困住 → 熟成 → 引爆！五關配額 10 → 20 → 40 → 80 → 160，殺滿過關</div>
+    <div class="how">
+      <div><b class="t">🫧 基本循環</b>吐泡泡困住敵人，<b>身體碰泡泡＝引爆</b>，鄰近泡泡連鎖爆。連得越多分數倍率越高（最高 ×16）。</div>
+      <div><b class="t">⚡ 集氣</b>點按＝普通泡泡；<b>按住約 0.8 秒放開＝強力泡</b>：困住的敵人一段時間內保證掙脫不了（白色虛線環）。</div>
+      <div><b class="t">⏳ 熟成賭注</b>被困的泡泡會隨時間變色升值——但越熟越容易掙脫，掙脫的敵人會<b>暴走</b>還會震鬆鄰居泡泡。</div>
+      <div><b class="t">❤️ 生存</b>被敵人碰到扣 1 血（短暫無敵）。血歸零＝結束。過關補滿血。</div>
+    </div>
+    <div class="tiers">
+      <div class="tier"><span class="dot" style="background:#4ade80"></span><br><b>綠 ×1</b><br>分數</div>
+      <div class="tier"><span class="dot" style="background:#facc15"></span><br><b>黃 ×2</b><br>補血 ♥</div>
+      <div class="tier"><span class="dot" style="background:#fb923c"></span><br><b>橙 ×3.5</b><br>雙泡能力</div>
+      <div class="tier"><span class="dot" style="background:#ef4444"></span><br><b>紅 ×6</b><br>★ 無敵星</div>
+    </div>
+    <div class="tiers-note">引爆時依每顆泡泡的顏色領獎勵；紅泡無敵星＝碰到敵人自動變泡泡</div>
+    <div class="keys">
+      <kbd>←→</kbd>/<kbd>A D</kbd> 移動　<kbd>空白</kbd>/<kbd>W</kbd> 跳　<kbd>J</kbd>/<kbd>滑鼠</kbd> 吐泡（按住集氣）　<kbd>P</kbd> 暫停　<kbd>R</kbd> 重開　<kbd>M</kbd> 回此頁
+    </div>
+    <div class="diffs">
+      <button id="start-easy">簡單<small>7♥ · 強力泡永久鎖 · 綠泡也補血</small></button>
+      <button id="start-normal">中等<small>5♥ · 標準規則</small></button>
+      <button id="start-hard">最難<small>3♥ · 快 · 不停生怪</small></button>
+    </div>
+  </div>
+</div></div>
 
 <div id="panel">
   <h1>蓄能引爆 · 手感原型 v0.3</h1>
@@ -269,8 +334,8 @@ function applyPreset(name) {
 // squash & stretch、Tier 著色、閃爍照常套用 —— 正式美術只要換圖。
 // ---------------------------------------------------------------------
 const EMBED = {
-  dragonW1: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABNUlEQVR42r2XwQ3CMAxFO0IRFw6ICVClLsGBkToVWyAW4IbEDBy4glLJ6Nc4Tpw4tfQlaCH/xXGctusKY7M9fN634afwvWsZwYC0OoBkFruGkE0BMCvT/fwnV5DYbCXjZiCY3hxj0ukyzCqCkAovZciDAMwQJWnn0fe7WW4AqVSnAEwQuQA4uGReDMBrgAPgoM0AEEQztgBUQWjmHEICCJ9NNcCVA5BSFkD40XHaL+QBYDanPxJADAJ3irQEJFP6+exzAGidn+P4JxMAh7Ck3w0AC9G61hKA+9aLBa+Z4uM4Za7BuJ3/qZnHrq8GEItmALlRBaBVfnMANEYQbEoY18drITdz7Nu8K0rGpKoth70fB5EOpiAyLT50OEAYDFtvCkCrFZdH8BoAt62oPZxo95q/KXvGF5V+7tzkKBwxAAAAAElFTkSuQmCC",
-  dragonW2: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABMElEQVR42r2XUQrCMAyGd4SJLz6IJ5DBLuGDR9qpvIXsAr4JnsEHX5UOIlmWtEmbNvCDDO3/JU3T2XUFsdufvqCudQTTzzz8VR2CZtsUgDOTnlXZEilbMJse141cQaRsOeNqILi8GmPQ5TYsyoLgGi9lSAMAzBA5ZafR94dFbgCpUqcATBBaALw4Z54NQHuAAuBFqwFgkJixBaAIImZOITiA8NnUA1QagJRUAOFL5+m4kgeA2Rx+CAASBD4p3BaATOWn2WsAYJ9f47iRCYBCWMrvBoAb0brXHID70ZOC9kz2dZwyj8G43f+pzKXnzQCkqAagjSKAWOdXB8DGGAQPJRz353slN3M8t+lU5IxBReZ49uOFuIsp+6KJAYQM8OhtChD7p6sFcDt+2pcTTjlr/wBMud6sOOwcEwAAAABJRU5ErkJggg==",
+  dragonW1: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADkUlEQVR4AbSVO2tUURDH567xgX3ABF+VhaXEFEEEKxE/gPglggQREUTERkSD5CPYiJWVpLCwkSBhsbQQRI26Ea3sfGz2Or/ZO5e5Z+/u3s2S5fzvzJwzZ+Z/5jy2Jbv/5ToVqNh9m4aA5J8ukBkSAH1iNCFAcIcnyLfWMvnTeW0kfm/spx8f5ERoQsCSFFFJAuT4ci6HX84aCcZad+dlcT3Lgdr4ONQc3hoR8JV6GE0i19qZLF/elpsHugb0pVkRwJhD54wk0ojAj3ZXspOvpFilJdHAjRpEIKzOEFFRbcMI4AzMm3KTfGFxe6LkNlk/VGVxPVNNypgYoI5AzumOB4vJ45I/XsjFQeAUw0jUEbC5B+fPSUHCbAKYknw8aa/XK0foK42g1MWoJcChA4eW/tm+hxgVlUTXn3aE5K1WPxQ6Towhx6E/q+qVkRiw79WhQevBlSOVTidS6Rxh1BEY4T79ELdCo5SHMSXAAFCfvWscao1ueVIC9urFw6eO1jZ+mrDP/b8zAljNytt91ud7b4Z+GFMxtg0Q4MHh4ambCQkS+5jrkAAkdbhPKokR+1IC9lrw8ODUu9NBSHtzziQfnl4kiDo24PQPw9qLOYu1ecmqb7lSAjZCIEdKghWc/9UV4D6p/HL6hDjiGI8ZiH2RAP9k/KPZ3ecKclgAJECsBEEgg4xgC6LtOnHQ4+qxnYCtvBgUWAJP6JObknj0ZEuOvftssCT6V01soLaVXqU1J0CnwZMiIcEkgDdVQTKGdFCJCPYaX4APxFVafJWV5gTKzsJZXHqQ0kGV+N8f3/c3F3cEdG9/FbByqq3eo1tKoNwK7jXBIhEqQvIYkpVDAt/Yj84zzX8FusJiq6y0SCDnAIGKR2GQnESFaYJS07d6Zsfsus84Ek7AbgABuMNIwB+LH0DsFFRnVHL3h0TdVjLuBNCFcrpjmpyDRzJWDSJRmzzmA9k6l5IACXBgj9kGgA2oAgEghQTej5wGTiDzoFTBQWAn5pWhD0T7xrPvdA0FxItBrmKh9oUTMIv7TkJARyqpBKA6VAqfmXtHEU0wkJxJkYA5UAnuryfHBjg7YoUY+/Dxm1CFCHxZOUAfhkgAH0hkD6/OCyQAnQ4nhc31o2Loz2+dFeagO2oSj30HfC4SEgY1IKWi30gMsNiOeBYgAVbfL5R/aDxoAP86pBWo87E+Sg24fg4qQJ85hA99DioBwnBF/Q8AAP//Oj+vDwAAAAZJREFUAwCUIM0+Azjv1QAAAABJRU5ErkJggg==",
+  dragonW2: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADfElEQVR4AcSVO2tUURDH567xgX3ABF+VhaXEFEEEKxE/gPglggQREUTERkSD5CPYiJWVpLCwkSBhsbQQRI26Ea3sfGz2Or/ZO5e5Z+/u3nWRLOe/M3POnJn/mfO4Ldnl3zQEcuUOVPx7m4aA5B/OkRkSAH1iNCFAcIcnyLfWMvnVeWkkfm7spR8f5ERoQsCSFFFJAuToci4Hn88aCcZat+dlcT3Lgdr4ONQc3hoR8JV6GE0iV9qZLF/cluv7ugb0pVkRwJhD54wk0ojAt3ZXsuMvpFilJdHAjRpEIKzOEFFRbcMI4AzMm3KTfGFxe6LkNln/qMrieqaalDExQB2BnNMdDxaTxyV/uJCLg8AphpGoI2Bz98+fkYKE2QQwJfnzpL1erxyhrzSCUhejlgCHDhxY+mP7HmJUVBJdfdwRkrda/VDoODGGHIf+rKpXRmLAvleHBq17lw5VOp1IpXOEUUdghPv0Q9wKjVIexpQAA0B9/l/jUGt0y5MSsFcvHj51tLbx3YT93f09I4DVrLzeY32+92boH2MqxrYBAjw4PDx1MyFBYh9zHRKApA73SSUxYl9KwF4LHh6cerc6CGlvzpnkj6cXCaKODTj9w7D2bM5ibV6w6luulICNEMiRkmAFZ390BbhPKj+dPCaOOMZjBmJfJMCXjC+a3X2uIIcFQALEShAEMsgItiDarhMHPa4e2wnYyotBgSXwhD65KYkHj7bkyJuPBkuin2piA7Wt9CqtOQE6DZ4UCQkmAbypCpIxpINKRLDX+AJ8IK7S4qusNCdQdhbO4tKDlA6qxG9/fN9fnd8R0L35WcDKibZ6j24pgXIruNcEi0SoCMljSFYOCXxjPzrPNN8KdIXFVllpkUDOAQIVj8IgOYkK0wSlpm/11I7ZdX/jSDgBuwEE4A4jAR8WP4DYKajOqOTuD4m6rWTcCaAL5XTHNDkHj2SsGkSiNnnMH2TrXEoCJMCBPWYbADagCgSAFBJ4P3IaOIHMg1IFB4GdmFeGPhDta0++0jUUEC8GuYqF2hdOwCzuOwkBHamkEoDqUCl8Zu4cRjTBQHImRQLmQCW4v54cG+DsiBVi7N37L0IVIvBl5QB9GCIBfCCR3b88L5AAdDqcFDbXj4qhP71xWpiD7qhJPPYd8LlISBjUgJSKfiMxwGI74lmABFh9u1B+0HjQAP51+AsAAP//fr9hCAAAAAZJREFUAwDaQbeFuIWatAAAAABJRU5ErkJggg==",
   grumpW1: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABIUlEQVR42u2WPQ7CMAyFc4QiFiauwWV6InbOAhdjDvJgyTJ+zksbaIdG8gD18/uaOj+lHGOv43S+1s3qSfJ9fldGxOaw9boE8ny+vag8GkCTNZDImmcQbL0vgRRFAm+aQTD1QloRIJH8RoHMtVYK4afLC9Tk+agwLEirHmWugpaxhtdkNbsBMhCUSwNk39ZPr/0PgSKgqFfSphQTP7yxDT+6NqDI3ANM0wWaS8hzD7AIIgKQ4gyAhVgNYKf1bwCtDu4N3SXps0AFI4w1qINLk/zWmS0nFLaOj3Qr9slomWVLMDPvAog+QwSg+QggqktfMrJeaL0pe2Sn16wIgDGO3nbxPZNprMh49MW2sB3+M+MlMcScWUps3gEwrAfW5O1qfAC2yaTrHAk42gAAAABJRU5ErkJggg==",
   grumpW2: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABI0lEQVR42u2WOw7CQAxEc4QgGiquwWVyInrOAhejDnJhyTKe2dlkBU0suUjW9rxsvJ9pOuwwYKfzdf1bPQu+L+9VSVJj1HpdCTa+3F5SnAzgwe4oKYozCLXeV4IVRQlZlEEo9UpaS0BJ9owciXstCpGnKye4yPOxQo8grXqSuCe0hN1zDqvZDcBAUKwMwP5tnt74DoEioKpXaFOaSLYsHD1b1wZUiWeAeb5AcXMbzwCbICoAK64ARIjdAHFafwbQ6uBe911SPgs8YYSwu3RweVDeOtlyQh7rZKdbcQ5Gy4wtQSbeBVD9hgrA4xFAVVe+ZLBeaH2pemTTa1YFoAhXX7v5nqk0ViU8+mI7qR0+XLh1C9p14qniSoPJy+0AGNUDPePIPu+4omkMW5ubAAAAAElFTkSuQmCC",
   rageW1: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABJElEQVR42u2WzQ3CMAyFM0IRF06cuLIFG7AVSzAFczFCkZEsWcbPeUkD9NBIPkD9/L6mzk8p21jr2O2P89/qSfLzepkZEZvD1msSyPPH+UTl0QCarIFE1jyDYOt9CKQoEnjTDIKpF9KKAInkNwpkrrVSCD9dXqAm8/0Gw4LU6lHmKqgZa3hNVrMZIANBuTRA9m399Nr/ECgCinolbcq3kR/O2IYfTRtQaO4ApukAzSXkuQfogogApDgDYCEWA9hp/RlArYNbQ3dJ+ixQwQhjDerg0iS/dWbLCYWt4yPdin0yWmbZEszMmwCizxABaD4CiOrSl4ysF2pvyh7Z6TUrAmCMo7ftvmcyjRUZj77YFrbDv2bcE0PMmaXE5m0Aw3pgSd6qxguvCEp50aXKXgAAAABJRU5ErkJggg==",
@@ -491,6 +556,7 @@ function reset() {
   S.paused = false;
 }
 reset();
+S.paused = true; // 等 launcher 選難度才開始
 
 // ---------------------------------------------------------------------
 // 輸入
@@ -501,9 +567,10 @@ addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   keys[k] = true;
   if (k === 'j' && !e.repeat) startCharge(); // 按下開始集氣，放開才發射
-  if (k === 'p') S.paused = !S.paused;
-  if (k === 'r') reset();
+  if (k === 'p' && !launcherOpen()) S.paused = !S.paused;
+  if (k === 'r' && !launcherOpen()) reset();
   if (k === 'o') togglePanel();
+  if (k === 'm' && !launcherOpen()) openLauncher();
 });
 addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
@@ -519,6 +586,20 @@ addEventListener('blur', () => { // 切走視窗：清輸入、取消集氣（�
 document.getElementById('resetBtn').addEventListener('click', reset);
 const togglePanel = () => document.body.classList.toggle('panel-open');
 document.getElementById('gearBtn').addEventListener('click', togglePanel);
+
+// Launcher 教學頁（v0.5）：開場顯示、選難度開始；M 隨時回來
+const launcherEl = document.getElementById('launcher');
+const launcherOpen = () => !launcherEl.classList.contains('hidden');
+function openLauncher() { launcherEl.classList.remove('hidden'); S.paused = true; }
+function startGame(preset) {
+  applyPreset(preset);
+  reset();
+  launcherEl.classList.add('hidden');
+  S.paused = false;
+}
+for (const name of ['easy', 'normal', 'hard']) {
+  document.getElementById('start-' + name).addEventListener('click', () => startGame(name));
+}
 
 const inputLeft  = () => keys['arrowleft'] || keys['a'];
 const inputRight = () => keys['arrowright'] || keys['d'];
@@ -1330,7 +1411,7 @@ function drawHudOverlay() {
     ctx.font = '18px "Courier New", monospace';
     ctx.fillStyle = '#dbe4ff';
     ctx.fillText(`總分 ${S.score} ／ 最大連鎖 ${S.maxChain} ／ 掙脫 ${S.escapes} 次`, W / 2, H / 2 + 10);
-    ctx.fillText('按 R 再來一輪', W / 2, H / 2 + 38);
+    ctx.fillText('R 再來一輪 ／ M 回主選單', W / 2, H / 2 + 38);
   }
 
   // 引爆瞬間的連鎖讀數
@@ -1374,7 +1455,7 @@ function drawHudOverlay() {
     ctx.font = '18px "Courier New", monospace';
     ctx.fillStyle = '#dbe4ff';
     ctx.fillText(`止步 LEVEL ${S.level} ／ 總分 ${S.score} ／ 最大連鎖 ${S.maxChain} ／ 掙脫 ${S.escapes} 次`, W / 2, H / 2 + 16);
-    ctx.fillText('按 R 重開', W / 2, H / 2 + 44);
+    ctx.fillText('R 重開 ／ M 回主選單', W / 2, H / 2 + 44);
   }
 }
 
@@ -1413,7 +1494,7 @@ for (const [slot, key] of Object.entries(EMBED_SLOTS)) {
 
 // Debug 出口：console 可直接戳內部狀態做調參實驗
 // 例：__BB.KNOBS.escapeRate = 1.8; __BB.S.bubbles[0].age = 4.6;
-window.__BB = { S, KNOBS, TIERS, tierOf, chainMult, spawnEnemy, detonate, processEscapes, hitPlayer, applyPreset, tryShoot, startCharge, releaseCharge, update, reset, keys, LEVELS };
+window.__BB = { S, KNOBS, TIERS, tierOf, chainMult, spawnEnemy, detonate, processEscapes, hitPlayer, applyPreset, tryShoot, startCharge, releaseCharge, update, reset, keys, LEVELS, startGame, openLauncher };
 </script>
 </body>
 </html>
